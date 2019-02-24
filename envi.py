@@ -23,7 +23,7 @@ class vec(object):
             self.y = .0
 
     def __repr__(self):
-        return '(' + str(self.x) + ', ' + str(self.y) + ')'
+        return '({0:.2f}, {1:.2f})'.format(self.x, self.y)
 
     def __add__(self, vec2):
         return vec(self.x + vec2.x, self.y + vec2.y)
@@ -58,6 +58,8 @@ class plane(object):
         for i in KEYPRESS_CODE:
             self.key[i] = False
 
+        self.crashed = False
+
         self.missile_cooldown = 0
 
     def __enter__(self):
@@ -83,7 +85,7 @@ class plane(object):
         new_accel = vec(xaccel, yaccel)
 
         if new_pos.y < Top_Margin + 30:
-            ytop_margin_force = (Top_Margin + 30 - new_pos.y) / 10
+            ytop_margin_force = -(Top_Margin + 30 - new_pos.y) / 10
         else:
             ytop_margin_force = 0
         new_pos.y -= ytop_margin_force
@@ -141,26 +143,27 @@ class plane(object):
             if self.heading == 0 and self._rotation == 0 and cur_rotat < 160:
                 vertical_force = 50
 
+
+            print('Ground', new_pos, 'vf', '{0:.4f}'.format(vertical_force))
+
             new_pos.y = Bottom_Margin
-            # if vertical_force > 0.4:
-                # _root.smokers.attachMovie("explosion", "blow", 300)
-                # _root.smokers.blow._x = self._x
-                # _root.smokers.blow._y = self._y
-                # _root.smokers.blow._xscale = 100
-                # _root.smokers.blow._yscale = 100
-                # _root.smokers.blow.onEnterFrame = function () {
-                #     if (self._currentframe == self._totalframes) {
-                #         self._parent.createEmptyMovieClip("destruct", self.getDepth())
-                #     }
-                # }
+            if vertical_force > 0.5:
                 # self.damage = max_damage
                 # destructor(this)
+                new_pos = vec(0, 0)
+                new_accel = vec(0, 0)
+                self.speed = 0
+                self.crashed = True
+                return
 
         self.pos = new_pos
         self.accel = new_accel
         self.speed = ((50 * self.speed) / 51) + (booster_speed / 51)
 
     def frame_control(self):
+        if self.crashed:
+            return
+
         if self.engine_power > 2:
             self.engine_power -= Power_Stage
 

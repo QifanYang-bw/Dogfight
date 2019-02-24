@@ -2,11 +2,13 @@
 
 Contains the Reversi Interface class.
 """
-
+import sys
 import pygame as pg
 from envi import *
 # from const import *
 # from core import *
+
+import random
 
 """ Initialization """
 
@@ -30,7 +32,6 @@ class Game(object):
         # self.enemies = pg.sprite.Group()
 
         self.player = [plane(0, vec(100, Bottom_Margin))]
-        self.player[0].key[68] = True
         self.player[0].key[87] = True
 
     def event_loop(self):
@@ -43,9 +44,14 @@ class Game(object):
             obj.frame_control()
             obj.fly()
 
+        if random.random() < 0.1:
+            self.player[0].key[68] = True
+        else:
+            self.player[0].key[68] = False
+
     def draw(self):
         with self.player[0] as p:
-            print(p.heading, p.pos)
+            print(p.heading, p.pos, p._rotation)
 
 
             self.rect = pg.Rect(0, 0, 24, 6)
@@ -53,7 +59,10 @@ class Game(object):
             # self.pos = self.rect.center
 
             self.image = pg.Surface(self.rect.size)
-            self.image.fill(pg.Color("dodgerblue"))
+            if not p.crashed:
+                self.image.fill(pg.Color("dodgerblue"))
+            else:
+                self.image.fill(pg.Color("red"))
 
 
             self.screen.fill(pg.Color("gray10"))
