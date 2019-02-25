@@ -35,7 +35,7 @@ class Player(pygame.sprite.Sprite):
             self.angle += self.angle_change
             # I prefer rotozoom because it looks smoother.
             self.image = pygame.transform.rotozoom(self.orig_image, self.angle, 1)
-            self.rect = self.image.get_rect(center=self.rect.center)
+            self.rect = self.image.get_rect(center = self.rect.center)
 
 # initialize pygame and create window
 pygame.init()

@@ -1,7 +1,17 @@
 import math
 
 MIN_STALL = 0
-KEYPRESS_CODE = [68, 65, 87, 83, 86, 67]
+KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire', 'Missile']
+
+WIDTH = 640
+HEIGHT = 320
+
+# Colors (R, G, B)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
 Top_Margin = 1;
 Left_Margin = 0
@@ -37,7 +47,7 @@ class vec(object):
     def tocp(self):
         return (self.x, self.y)
 
-class plane(object):
+class Plane(object):
 
     def __init__(self, heading, init_pos):
         self.heading = heading # 0 -> right, 1 -> left
@@ -47,9 +57,9 @@ class plane(object):
 
         self.engine_power = 0
         if self.heading == 0:
-            self._rotation = 180
+            self.rotation = 180
         else:
-            self._rotation = 0
+            self.rotation = 0
 
         self._stall = MIN_STALL
         self.speed = 0
@@ -76,10 +86,10 @@ class plane(object):
         # -----------------------------------------------------------------------------------------------
         # the x and y here are relative to the plane
         # Note that the direction of x heads down, the direction of y head right
-        xspeed = self.speed * math.cos(self._rotation / 180 * math.pi) # * self._xscale / 100
-        yspeed = self.speed * math.sin(self._rotation / 180 * math.pi) # * self._xscale / 100
-        xaccel = self.engine_power * math.cos(self._rotation / 180 * math.pi) / 2 # * self._xscale / 200
-        yaccel = self.engine_power * math.sin(self._rotation / 180 * math.pi) / 2 # * self._xscale / 200
+        xspeed = self.speed * math.cos(self.rotation / 180 * math.pi) # * self._xscale / 100
+        yspeed = self.speed * math.sin(self.rotation / 180 * math.pi) # * self._xscale / 100
+        xaccel = self.engine_power * math.cos(self.rotation / 180 * math.pi) / 2 # * self._xscale / 200
+        yaccel = self.engine_power * math.sin(self.rotation / 180 * math.pi) / 2 # * self._xscale / 200
 
         new_pos = self.pos - vec(xspeed + xaccel, yspeed + yaccel)
         new_accel = vec(xaccel, yaccel)
@@ -99,7 +109,7 @@ class plane(object):
             else:
                 self._stall = 1.5
         else:
-            self._stall = min(self._stall - 0.3, MIN_STALL)
+            self._stall = max(self._stall - 0.3, MIN_STALL)
 
         if self._stall > 1:
             new_pos.y += self._stall
@@ -124,41 +134,45 @@ class plane(object):
         #        repire_box_activated()
 
         # Crash Landing check
-        if self._rotation < 0:
-            self._rotation += 360
+        if self.rotation < 0:
+            self.rotation += 360
 
         # -----------------------------------------------------------------------------------------------
         # Landing Check
         if new_pos.y > Bottom_Margin + 1:
-            cur_rotat = self._rotation
-            vertical_force = (yaccel + yspeed + ytop_margin_force + self._stall) * math.sin(self._rotation / 180 * math.pi)
+            cur_rotat = self.rotation
+            vertical_force = (yaccel + yspeed + ytop_margin_force + self._stall) * math.sin(self.rotation / 180 * math.pi)
             
             if cur_rotat >= 90 and cur_rotat < 270:
-                self._rotation = 180
+                self.rotation = 180
             else:
-                self._rotation = 0
+                self.rotation = 0
 
-            if self.heading == 1 and self._rotation == 180 and cur_rotat > 20: #need edit!
+            if self.heading == 1 and self.rotation == 180 and cur_rotat > 20: #need edit!
                 vertical_force = 50
-            if self.heading == 0 and self._rotation == 0 and cur_rotat < 160:
+            if self.heading == 0 and self.rotation == 0 and cur_rotat < 160:
                 vertical_force = 50
 
 
-            print('Ground', new_pos, 'vf', '{0:.4f}'.format(vertical_force))
+            # if self.heading == 1:
+                # print(new_pos, 'vf', '{0:.4f}'.format(vertical_force))
+
 
             new_pos.y = Bottom_Margin
             if vertical_force > 0.5:
                 # self.damage = max_damage
                 # destructor(this)
-                new_pos = vec(0, 0)
                 new_accel = vec(0, 0)
                 self.speed = 0
                 self.crashed = True
-                return
+                print('\nBOOM!\n')
 
         self.pos = new_pos
         self.accel = new_accel
         self.speed = ((50 * self.speed) / 51) + (booster_speed / 51)
+
+        if self.heading == 1:
+            print('#{0}:'.format(self.heading), 'Rot:', self.rotation, self.pos)
 
     def frame_control(self):
         if self.crashed:
@@ -168,15 +182,19 @@ class plane(object):
             self.engine_power -= Power_Stage
 
         stearing_accel = self.accel.dist() / 9;
-        if self.key[68]:# and self._y < (Bottom_Margin - 2):
-            self._rotation = self._rotation - (Control_Stearing * stearing_accel)
-        if self.key[65]:
-            self._rotation = self._rotation + (Control_Stearing * stearing_accel)
+        if self.key['Left']:# and self._y < (Bottom_Margin - 2):
+            self.rotation = self.rotation - (Control_Stearing * stearing_accel)
+        if self.key['Right']:
+            self.rotation = self.rotation + (Control_Stearing * stearing_accel)
 
-        if self.key[87] and self.engine_power < Max_Power:
+        if self.key['Up'] and self.engine_power < Max_Power:
             self.engine_power = self.engine_power + (Power_Stage * 3)
-        if self.key[83] and self.engine_power > 2:
+        if self.key['Down'] and self.engine_power > 2:
             self.engine_power = self.engine_power - Power_Stage
+
+
+
+
 
 
     #     if (Key.isDown(86)):
@@ -200,15 +218,15 @@ class plane(object):
     #     my._parent[_local5].play();
     #     my._parent[_local5]._x = my._x;
     #     my._parent[_local5]._y = my._y;
-    #     my._parent[_local5]._rotation = my._rotation;
+    #     my._parent[_local5].rotation = my.rotation;
     #     my._parent[_local5].range = range;
     #     if (play_sound) {
     #         gun_shoot.start(0, 4);
     #     }
     #     my._parent[_local5].onEnterFrame = function () {
     #         var _local3;
-    #         this._x = this._x - (gun_speed * math.cos((this._rotation * math.pi) / 180));
-    #         this._y = this._y - (gun_speed * math.sin((this._rotation * math.pi) / 180));
+    #         this._x = this._x - (gun_speed * math.cos((this.rotation * math.pi) / 180));
+    #         this._y = this._y - (gun_speed * math.sin((this.rotation * math.pi) / 180));
     #         for (_local3 in _root.flayers) {
     #             if (((_root.flayers[_local3].hitTest(this) && (_local3 != my._name)) && ((_local3 == "f1") || (_local3 == "f4"))) && (this.range < range)) {
     #                 _root.flayers[_local3].attachMovie("explosion", "blow", 1);
