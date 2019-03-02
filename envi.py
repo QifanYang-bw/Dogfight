@@ -1,51 +1,8 @@
 import math
+from lib import *
 
 MIN_STALL = 0
-KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire', 'Missile']
-
-WIDTH = 640
-HEIGHT = 320
-
-# Colors (R, G, B)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-
-Top_Margin = 1;
-Left_Margin = 0
-Right_Margin = 640
-Bottom_Margin = 310
-
-Control_Stearing = 17
-Power_Stage = 0.05;
-
-Max_Power = 4;
-
-class vec(object):
-    def __init__(self, *args):
-        if len(args) > 0:
-            self.x = float(args[0])
-            self.y = float(args[1])
-        else:
-            self.x = .0
-            self.y = .0
-
-    def __repr__(self):
-        return '({0:.2f}, {1:.2f})'.format(self.x, self.y)
-
-    def __add__(self, vec2):
-        return vec(self.x + vec2.x, self.y + vec2.y)
-
-    def __sub__(self, vec2):
-        return vec(self.x - vec2.x, self.y - vec2.y)
-
-    def dist(self):
-        return (self.x * self.x + self.y * self.y)**0.5
-
-    def tocp(self):
-        return (self.x, self.y)
+KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire'] #Missile
 
 class Plane(object):
 
@@ -68,9 +25,14 @@ class Plane(object):
         for i in KEYPRESS_CODE:
             self.key[i] = False
 
+        self.hp = 100
         self.crashed = False
 
+        self.beam_track = [0, None]
+
+        self.enemy = None
         self.missile_cooldown = 0
+
 
     def __enter__(self):
         return self
@@ -79,6 +41,11 @@ class Plane(object):
         return self
 
     def fly(self):
+        # Missile Cooldown
+        
+        if self.missile_cooldown > 0:
+            self.missile_cooldown -= 1
+
         # -----------------------------------------------------------------------------------------------
         # Initialize: yaccel, xaccel, yspeed, xspeed
         # ytop_margin_force, booster_speed
@@ -86,6 +53,7 @@ class Plane(object):
         # -----------------------------------------------------------------------------------------------
         # the x and y here are relative to the plane
         # Note that the direction of x heads down, the direction of y head right
+
         xspeed = self.speed * math.cos(self.rotation / 180 * math.pi) # * self._xscale / 100
         yspeed = self.speed * math.sin(self.rotation / 180 * math.pi) # * self._xscale / 100
         xaccel = self.engine_power * math.cos(self.rotation / 180 * math.pi) / 2 # * self._xscale / 200
@@ -148,9 +116,9 @@ class Plane(object):
             else:
                 self.rotation = 0
 
-            if self.heading == 1 and self.rotation == 180 and cur_rotat > 20: #need edit!
+            if self.heading == 1 and self.rotation == 180 and (cur_rotat > 15 or cur_rotat < 355): #need edit!
                 vertical_force = 50
-            if self.heading == 0 and self.rotation == 0 and cur_rotat < 160:
+            if self.heading == 0 and self.rotation == 0 and (cur_rotat < 165 or cur_rotat > 185):
                 vertical_force = 50
 
 
@@ -159,7 +127,7 @@ class Plane(object):
 
 
             new_pos.y = Bottom_Margin
-            if vertical_force > 0.5:
+            if vertical_force > 0.46:
                 # self.damage = max_damage
                 # destructor(this)
                 new_accel = vec(0, 0)
@@ -171,11 +139,11 @@ class Plane(object):
         self.accel = new_accel
         self.speed = ((50 * self.speed) / 51) + (booster_speed / 51)
 
-        if self.heading == 1:
-            print('#{0}:'.format(self.heading), 'Rot:', self.rotation, self.pos)
+        # if self.heading in {0, 1}:
+            # print('#{0}'.format(self.heading), 'Rot: {0:.2f} '.format(self.rotation), 'Pos:', self.pos)
 
     def frame_control(self):
-        if self.crashed:
+        if self.crashed or self.hp <= 0:
             return
 
         if self.engine_power > 2:
@@ -192,6 +160,20 @@ class Plane(object):
         if self.key['Down'] and self.engine_power > 2:
             self.engine_power = self.engine_power - Power_Stage
 
+        if self.key['Fire'] and self.missile_cooldown == 0:
+            self.beam_fire()
+
+    def beam_fire(self):
+        self.missile_cooldown = 90
+
+        res = hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)
+
+        if res[0]:
+            self.enemy.hp -= 20
+
+        self.beam_track = [10, (res[1].x, res[1].y)]
+
+        print(self.hp, self.enemy.hp)
 
 
 

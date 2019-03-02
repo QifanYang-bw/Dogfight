@@ -4,11 +4,11 @@ Contains the Reversi Interface class.
 """
 import sys
 import pygame as pg
+
+from lib import *
 from envi import *
 # from const import *
 # from core import *
-
-# import random
 
 """ Initialization """
 
@@ -19,7 +19,7 @@ Planeimg_Filename = ['plane1.png', 'plane2.png']
 """
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, plane, image):
+    def __init__(self, plane, image, color):
         super().__init__()
 
         self.plane = plane
@@ -27,6 +27,8 @@ class Player(pg.sprite.Sprite):
         self.image = image
         # Store a reference to the original to preserve the image quality.
         self.orig_image = self.image
+
+        self.color = color
 
         self.pos = (plane.pos.x, plane.pos.y)
         self.rect = self.image.get_rect(center = self.pos)
@@ -59,10 +61,8 @@ class Game(object):
             curimage = pg.image.load(Image_Path + Plane_Filename).convert_alpha()
             
             # curimage.set_colorkey((255,255,255))
-            # return a width and height of an image
-            cursize = curimage.get_size()
-            # create a 2x bigger image than self.image
-            cur_imgresize = pg.transform.scale(curimage, (int(cursize[0]*0.8), int(cursize[1]*0.8)))
+            # cursize = curimage.get_size()
+            cur_imgresize = pg.transform.scale(curimage, (42, 16))
 
             self.PlaneImg.append(cur_imgresize)
 
@@ -71,7 +71,11 @@ class Game(object):
         # self.enemies = pg.sprite.Group()
 
         self.players = [Plane(0, vec(100, Bottom_Margin)), Plane(1, vec(540, Bottom_Margin))]
-        self.playerdisplay = [Player(self.players[0], self.PlaneImg[0]), Player(self.players[1], self.PlaneImg[1])]
+        self.players[0].enemy = self.players[1]
+        self.players[1].enemy = self.players[0]
+
+        self.playerdisplay = [Player(self.players[0], self.PlaneImg[0], (128, 220, 32)),
+                              Player(self.players[1], self.PlaneImg[1], (220, 64,  64))]
 
         for _ in self.playerdisplay:
             self.all_sprites.add(_)
@@ -99,6 +103,8 @@ class Game(object):
                     p1.key['Up'] = boolValue
                 elif event.key == pg.K_DOWN:
                     p1.key['Down'] = boolValue
+                elif event.key == pg.K_COMMA:
+                    p1.key['Fire'] = boolValue
 
 
             if len(self.players) > 1:
@@ -111,6 +117,8 @@ class Game(object):
                         p2.key['Up'] = boolValue
                     elif event.key == pg.K_s:
                         p2.key['Down'] = boolValue
+                    elif event.key == pg.K_v:
+                        p2.key['Fire'] = boolValue
 
 
     def update(self, dt):
@@ -129,10 +137,18 @@ class Game(object):
         self.screen.fill(BLACK)
         self.all_sprites.draw(self.screen)
 
+        for player in self.playerdisplay:
+            plane = player.plane
+            if plane.beam_track[0] > 0:
+                plane.beam_track[0] -= 1
+                pg.draw.lines(self.screen, player.color, False, [(plane.pos.x, plane.pos.y), plane.beam_track[1]], 2)
+
         pg.display.flip()
 
-        with self.players[0] as p:
-            print(p.heading, p.pos, p._rotation)
+        # pygame.draw.lines(screen, color, closed, pointlist, thickness)
+
+        # with self.players[0] as p:
+        #     print(p.heading, p.pos, p._rotation)
 
     def run(self):
         while not self.done:
