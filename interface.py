@@ -49,7 +49,9 @@ class Player(pg.sprite.Sprite):
 
 class Game(object):
     def __init__(self):
-        self.done = False
+        self.close = False
+        self.winner = None
+
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         self.screen_rect = self.screen.get_rect()
 
@@ -81,17 +83,16 @@ class Game(object):
             self.all_sprites.add(_)
 
     def event_loop(self):
+
         for event in pg.event.get():
 
             if event.type == pg.QUIT:
-                self.done = True
+                self.close = True
 
             boolValue = None
             if event.type == pg.KEYDOWN:
-                # Set the rotation speed of the car sprite.
                 boolValue = True
             elif event.type == pg.KEYUP:
-                # Stop rotating if the player releases the keys.
                 boolValue = False
 
             with self.players[0] as p1:
@@ -125,9 +126,17 @@ class Game(object):
         alive_count = 0
 
         for obj in self.players:
-            if not obj.crashed:
+            if not obj.crashed and obj.hp > 0:
+                alive_count += 1
+
                 obj.frame_control()
                 obj.fly()
+
+        if alive_count <= 1:
+            self.winner = "No Winner"
+            for obj_num in range(len(self.players)):
+                if not self.players[obj_num].crashed and self.players[obj_num].hp > 0:
+                    self.winner = 'Player ' + str(obj_num)
 
 
     def draw(self):
@@ -151,12 +160,17 @@ class Game(object):
         #     print(p.heading, p.pos, p._rotation)
 
     def run(self):
-        while not self.done:
+        while not self.close and self.winner == None:
             dt = self.clock.tick(self.fps)
             self.event_loop()
             self.update(dt)
             self.draw()
             # pg.display.update()
+
+        print(self.winner, 'wins!')
+
+        while not self.close:
+            self.event_loop()
 
 
 if __name__ == "__main__":

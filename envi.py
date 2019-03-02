@@ -31,7 +31,7 @@ class Plane(object):
         self.beam_track = [0, None]
 
         self.enemy = None
-        self.missile_cooldown = 0
+        self.missile_cooldown = 105
 
 
     def __enter__(self):
@@ -42,7 +42,7 @@ class Plane(object):
 
     def fly(self):
         # Missile Cooldown
-        
+
         if self.missile_cooldown > 0:
             self.missile_cooldown -= 1
 
@@ -164,12 +164,14 @@ class Plane(object):
             self.beam_fire()
 
     def beam_fire(self):
-        self.missile_cooldown = 90
+        self.missile_cooldown = 75
+
+        print(self.rotation)
 
         res = hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)
 
         if res[0]:
-            self.enemy.hp -= 20
+            self.enemy.hp -= 50
 
         self.beam_track = [10, (res[1].x, res[1].y)]
 
