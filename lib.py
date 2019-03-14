@@ -1,4 +1,5 @@
 import math
+# import os
 
 epsilon = 1e-6
 
@@ -24,9 +25,11 @@ Plane_Width = 42
 Plane_Height = 16
 
 Control_Stearing = 17
-Power_Stage = 0.05;
+Power_Stage = 0.05
+Min_Stall = 0
 
-Max_Power = 4;
+Max_Power = 4
+
 
 class vec(object):
     def __init__(self, *args):
@@ -48,6 +51,9 @@ class vec(object):
 
     def dist(self):
         return (self.x * self.x + self.y * self.y)**0.5
+
+    def copy(self):
+        return vec(self.x, self.y)
 
     def tocp(self):
         return (self.x, self.y)
@@ -145,7 +151,5 @@ def hitbox_check(center1, rotate1, center2, rotate2, hitbox_width = Plane_Width,
             break
 
     return (flag, p3)
-
-
 
 # print(hitbox_check(vec(100, 100), 180, vec(400, 120), 0, 42, 16))

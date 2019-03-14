@@ -1,13 +1,26 @@
 import math
 from lib import *
 
-MIN_STALL = 0
+Initial_HP = 100
+Damage_per_hit = 1
+
 KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire'] #Missile
 
 class Plane(object):
 
-    def __init__(self, heading, init_pos):
+    def __init__(self, controller, heading, init_pos):
+
         self.heading = heading # 0 -> right, 1 -> left
+
+        self.controller = controller
+        
+        self.enemy = None
+
+        # ------- Flight Settings -------
+
+        self.reset(init_pos)
+
+    def reset(self, init_pos):
 
         self.pos = init_pos
         self.accel = vec(0, 0)
@@ -18,21 +31,33 @@ class Plane(object):
         else:
             self.rotation = 0
 
-        self._stall = MIN_STALL
+        self._stall = Min_Stall
         self.speed = 0
 
         self.key = dict()
         for i in KEYPRESS_CODE:
             self.key[i] = False
 
-        self.hp = 100
+        # ------- Enemy and Fire Settings -------
+
+        self.hp = Initial_HP
         self.crashed = False
+        self.firing = False
+        self.on_ground = True
 
         self.beam_track = [0, None]
 
-        self.enemy = None
         self.missile_cooldown = 105
 
+        # ------- Reward Settings -------
+
+        self.status_change = 0
+        self.damage_caused = 0
+        self.damage_received = 0
+        self.altitude_change = 0
+
+    def __repr__(self):
+        return 'Plane ' + str(self.heading + 1) + ' at ' + str(self.pos)
 
     def __enter__(self):
         return self
@@ -49,6 +74,9 @@ class Plane(object):
         # -----------------------------------------------------------------------------------------------
         # Initialize: yaccel, xaccel, yspeed, xspeed
         # ytop_margin_force, booster_speed
+
+        if self.rotation < 0: self.rotation += 360
+        if self.rotation > 360: self.rotation -= 360
 
         # -----------------------------------------------------------------------------------------------
         # the x and y here are relative to the plane
@@ -68,7 +96,6 @@ class Plane(object):
             ytop_margin_force = 0
         new_pos.y -= ytop_margin_force
 
-
         # -----------------------------------------------------------------------------------------------
         # Stall Force Check - Whether the vertical speed of the plane decreases
         if abs(xspeed + xaccel) < 3.7:
@@ -77,7 +104,7 @@ class Plane(object):
             else:
                 self._stall = 1.5
         else:
-            self._stall = max(self._stall - 0.3, MIN_STALL)
+            self._stall = max(self._stall - 0.3, Min_Stall)
 
         if self._stall > 1:
             new_pos.y += self._stall
@@ -101,13 +128,13 @@ class Plane(object):
         #    if ((self.damage > rep_damage) && (!repire_on)) {
         #        repire_box_activated()
 
-        # Crash Landing check
-        if self.rotation < 0:
-            self.rotation += 360
-
         # -----------------------------------------------------------------------------------------------
         # Landing Check
-        if new_pos.y > Bottom_Margin + 1:
+
+        self.status_change = 0
+
+        # Easter Egg: the 0.75 here related to possible bumps of the plane
+        if new_pos.y > Bottom_Margin + 0.75:
             cur_rotat = self.rotation
             vertical_force = (yaccel + yspeed + ytop_margin_force + self._stall) * math.sin(self.rotation / 180 * math.pi)
             
@@ -116,14 +143,14 @@ class Plane(object):
             else:
                 self.rotation = 0
 
-            if self.heading == 1 and self.rotation == 180 and (cur_rotat > 15 or cur_rotat < 355): #need edit!
+            if self.heading == 1 and self.rotation == 180 and (cur_rotat > 10 or cur_rotat < 357.5): #need edit!
                 vertical_force = 50
-            if self.heading == 0 and self.rotation == 0 and (cur_rotat < 165 or cur_rotat > 185):
+            if self.heading == 0 and self.rotation == 0 and (cur_rotat < 170 or cur_rotat > 182.5):
                 vertical_force = 50
 
 
             # if self.heading == 1:
-                # print(new_pos, 'vf', '{0:.4f}'.format(vertical_force))
+            #     print(new_pos, 'vf', '{0:.4f}'.format(vertical_force))
 
 
             new_pos.y = Bottom_Margin
@@ -135,12 +162,28 @@ class Plane(object):
                 self.crashed = True
                 print('\nBOOM!\n')
 
+            if not self.on_ground:
+                self.status_change = 1
+
+            self.on_ground = True
+
+        else:
+            if self.on_ground:
+                self.status_change = 1
+
+            self.on_ground = False
+
+        self.altitude_change = abs(self.pos.y - new_pos.y) / 20
+
         self.pos = new_pos
         self.accel = new_accel
-        self.speed = ((50 * self.speed) / 51) + (booster_speed / 51)
+        self.speed = (50 * self.speed / 51) + (booster_speed / 51)
 
-        # if self.heading in {0, 1}:
-            # print('#{0}'.format(self.heading), 'Rot: {0:.2f} '.format(self.rotation), 'Pos:', self.pos)
+        if self.firing:
+            self.firing = False
+            self.beam_fire()
+        else:
+            self.beam_fire_clearup()
 
     def frame_control(self):
         if self.crashed or self.hp <= 0:
@@ -161,21 +204,48 @@ class Plane(object):
             self.engine_power = self.engine_power - Power_Stage
 
         if self.key['Fire'] and self.missile_cooldown == 0:
-            self.beam_fire()
+            if not self.on_ground:
+                self.firing = True
+
+        if self.on_ground:
+            self.missile_cooldown = max(self.missile_cooldown, 15)
+            # if self.heading == 0: print('yes', self.pos)
 
     def beam_fire(self):
-        self.missile_cooldown = 75
-
-        print(self.rotation)
+        self.missile_cooldown = 10
 
         res = hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)
 
         if res[0]:
-            self.enemy.hp -= 50
+            self.enemy.hp -= Damage_per_hit
+            self.damage_caused = Damage_per_hit
+            self.enemy.damage_received = Damage_per_hit
+        else:
+            self.damage_caused = -Damage_per_hit / 10
+            self.enemy.damage_received = -Damage_per_hit / 10
 
         self.beam_track = [10, (res[1].x, res[1].y)]
 
-        print(self.hp, self.enemy.hp)
+        # print(self.hp, self.enemy.hp)
+
+    def beam_fire_clearup(self):
+        self.damage_caused = 0
+        self.enemy.damage_received = 0
+
+    def score(self):
+        # print(self.altitude_change)
+        if self.crashed or self.hp <= 0:
+            return -2
+        else:
+            return self.damage_caused - self.damage_received + self.status_change
+            # return self.damage_caused - self.enemy.damage_received + self.altitude_change
+
+    #     if self.crashed or self.hp <= 0:
+    #         return 0.
+    #     elif self.enemy.hp == 0:
+    #         return 1.
+    #     else:
+    #         return self.hp * 0.005 + (100 - self.enemy.hp) * 0.005
 
 
 

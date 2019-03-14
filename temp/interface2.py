@@ -157,7 +157,7 @@ class Game(object):
                 plane.beam_track[0] -= 1
                 pg.draw.lines(self.screen, player.color, False, [(plane.pos.x, plane.pos.y), plane.beam_track[1]], 2)
 
-        pg.display.update()
+        pg.display.flip()
 
         # pygame.draw.lines(screen, color, closed, pointlist, thickness)
 
@@ -166,7 +166,6 @@ class Game(object):
 
     def run(self):
         while not self.close and self.winner == None:
-            self.event_loop()
             self.update()
 
             dt = self.clock.tick(self.fps)

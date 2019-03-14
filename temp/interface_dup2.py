@@ -2,19 +2,32 @@
 
 Contains the Game Interface class.
 """
+
+# ------ Temporary Const Def ------
+
+from enum import Enum
+
+# dirname = os.path.dirname(__file__)
+
+class PlayerState(Enum):
+    Human = 0
+    AI_RL = 1
+
+playerlist = [PlayerState.AI_RL, PlayerState.AI_RL]
+
+# ------ Temporary Const Def ------
+
 import sys
+import random
 import pygame as pg
 
-from const import *
 from lib import *
 from envi import *
 
 """ Game Constants """
 
-controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
-
-p1_keyseq = [pg.K_LEFT, pg.K_RIGHT, pg.K_UP, pg.K_DOWN, pg.K_COMMA]
-p2_keyseq = [pg.K_a, pg.K_d, pg.K_w, pg.K_s, pg.K_v]
+Input_Dim = 18
+Output_Dim = 5
 
 p1_init_pos = vec(100, Bottom_Margin)
 p2_init_pos = vec(540, Bottom_Margin)
@@ -91,43 +104,6 @@ class Game(object):
         for _ in self.playerdisplay:
             self.all_sprites.add(_)
 
-    def event_loop(self):
-
-        # for p in self.players:
-        #     if p.controller == PlayerState.AI_RL:
-        #         output_key = RLagent.think(p)
-
-        #         for i in range(len(output_key)):
-        #             p.key[controlseq[i]] = output_key[i]
-
-        for event in pg.event.get():
-
-            if event.type == pg.QUIT:
-                self.close = True
-
-            boolValue = None
-            if event.type == pg.KEYDOWN:
-                boolValue = True
-            elif event.type == pg.KEYUP:
-                boolValue = False
-
-            with self.players[0] as p:
-                if p.controller == PlayerState.Human:
-                    for i in range(len(p1_keyseq)):
-                        if event.key == p1_keyseq[i]:
-                            p.key[controlseq[i]] = boolValue
-                            break
-
-
-            with self.players[1] as p:
-                if len(self.players) > 1:
-                    if p.controller == PlayerState.Human:
-                        for i in range(len(p2_keyseq)):
-                            if event.key == p2_keyseq[i]:
-                                p.key[controlseq[i]] = boolValue
-                                break
-
-
     def update(self):
         alive_count = 0
 
@@ -144,6 +120,7 @@ class Game(object):
                 if not self.players[obj_num].crashed and self.players[obj_num].hp > 0:
                     self.winner = 'Player ' + str(obj_num)
 
+
     def draw(self):
 
         self.all_sprites.update()
@@ -151,41 +128,15 @@ class Game(object):
         self.screen.fill(BLACK)
         self.all_sprites.draw(self.screen)
 
-        for player in self.playerdisplay:
-            plane = player.plane
-            if plane.beam_track[0] > 0:
-                plane.beam_track[0] -= 1
-                pg.draw.lines(self.screen, player.color, False, [(plane.pos.x, plane.pos.y), plane.beam_track[1]], 2)
+        # for player in self.playerdisplay:
+        #     plane = player.plane
+        #     if plane.beam_track[0] > 0:
+        #         plane.beam_track[0] -= 1
+        #         pg.draw.lines(self.screen, player.color, False, [(plane.pos.x, plane.pos.y), plane.beam_track[1]], 2)
 
-        pg.display.update()
+        pg.display.flip()
 
         # pygame.draw.lines(screen, color, closed, pointlist, thickness)
 
         # with self.players[0] as p:
         #     print(p.heading, p.pos, p._rotation)
-
-    def run(self):
-        while not self.close and self.winner == None:
-            self.event_loop()
-            self.update()
-
-            dt = self.clock.tick(self.fps)
-            self.draw()
-            # pg.display.update()
-
-        print(self.winner, 'wins!')
-
-        while not self.close:
-            self.event_loop()
-
-def main():
-    game = Game()
-    game.run()
-    pg.quit()
-    sys.exit()
-
-'''
-Check if main.py is the called program.
-'''
-if __name__ == '__main__':
-    main()

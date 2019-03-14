@@ -2,10 +2,25 @@
 
 Contains the Game Interface class.
 """
+
+# ------ Temporary Const Def ------
+
+from enum import Enum
+
+# dirname = os.path.dirname(__file__)
+
+class PlayerState(Enum):
+    Human = 0
+    AI_RL = 1
+
+playerlist = [PlayerState.AI_RL, PlayerState.AI_RL]
+
+# ------ Temporary Const Def ------
+
 import sys
+import random
 import pygame as pg
 
-from const import *
 from lib import *
 from envi import *
 
@@ -16,8 +31,16 @@ controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 p1_keyseq = [pg.K_LEFT, pg.K_RIGHT, pg.K_UP, pg.K_DOWN, pg.K_COMMA]
 p2_keyseq = [pg.K_a, pg.K_d, pg.K_w, pg.K_s, pg.K_v]
 
+Input_Dim = 18
+Output_Dim = 5
+
 p1_init_pos = vec(100, Bottom_Margin)
 p2_init_pos = vec(540, Bottom_Margin)
+
+# Upper and Lower limit of data, for normalization
+#                 [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.missile_cooldown, _.hp]
+state_upper_bar = [1, Right_Margin,     Top_Margin,    2, 360, 2,  2, 105, 100]
+state_lower_bar = [0, Left_Margin - 30, Bottom_Margin, 0, 0,   0,  0, 0,     0]
 
 """ Initialization """
 
@@ -91,42 +114,42 @@ class Game(object):
         for _ in self.playerdisplay:
             self.all_sprites.add(_)
 
-    def event_loop(self):
+    def reset(self):
+        self.close = False
+        self.winner = None
 
-        # for p in self.players:
-        #     if p.controller == PlayerState.AI_RL:
-        #         output_key = RLagent.think(p)
+        self.players[0].reset(p1_init_pos.copy())
+        self.players[1].reset(p2_init_pos.copy())
 
-        #         for i in range(len(output_key)):
-        #             p.key[controlseq[i]] = output_key[i]
+        self.players[0].enemy = self.players[1]
+        self.players[1].enemy = self.players[0]
 
-        for event in pg.event.get():
+    def done(self):
+        return self.winner != None
 
-            if event.type == pg.QUIT:
-                self.close = True
+    def state(self, serial):
+        serial -= 1
 
-            boolValue = None
-            if event.type == pg.KEYDOWN:
-                boolValue = True
-            elif event.type == pg.KEYUP:
-                boolValue = False
+        cur_player = self.players[serial]
 
-            with self.players[0] as p:
-                if p.controller == PlayerState.Human:
-                    for i in range(len(p1_keyseq)):
-                        if event.key == p1_keyseq[i]:
-                            p.key[controlseq[i]] = boolValue
-                            break
+        cur_state = []
 
+        for _ in [cur_player, cur_player.enemy]:
 
-            with self.players[1] as p:
-                if len(self.players) > 1:
-                    if p.controller == PlayerState.Human:
-                        for i in range(len(p2_keyseq)):
-                            if event.key == p2_keyseq[i]:
-                                p.key[controlseq[i]] = boolValue
-                                break
+            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, \
+                      _.missile_cooldown, _.hp]
 
+            for i in range(len(_state)):
+                _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
+            cur_state += _state
+
+        return cur_state
+
+    def reward(self, serial):
+        serial -= 1
+
+        return self.players[serial].score()
 
     def update(self):
         alive_count = 0
@@ -143,6 +166,7 @@ class Game(object):
             for obj_num in range(len(self.players)):
                 if not self.players[obj_num].crashed and self.players[obj_num].hp > 0:
                     self.winner = 'Player ' + str(obj_num)
+
 
     def draw(self):
 
@@ -164,28 +188,25 @@ class Game(object):
         # with self.players[0] as p:
         #     print(p.heading, p.pos, p._rotation)
 
-    def run(self):
-        while not self.close and self.winner == None:
-            self.event_loop()
-            self.update()
+    def clear(self):
+        '''
+            System would mark the program as freezed without the command.
+        '''
+        # pg.event.clear()
 
-            dt = self.clock.tick(self.fps)
-            self.draw()
-            # pg.display.update()
+        # To allow the user to close the process:
 
-        print(self.winner, 'wins!')
+        for event in pg.event.get():
 
-        while not self.close:
-            self.event_loop()
+            if event.type == pg.QUIT:
+                self.close = True
 
-def main():
-    game = Game()
-    game.run()
-    pg.quit()
-    sys.exit()
+    def make_move(self, serial, output_state):
+        serial -= 1
 
-'''
-Check if main.py is the called program.
-'''
-if __name__ == '__main__':
-    main()
+        with self.players[serial] as p:
+            for i in range(Output_Dim):
+
+                boolValue = random.random() < output_state[i]
+
+                p.key[controlseq[i]] = boolValue
