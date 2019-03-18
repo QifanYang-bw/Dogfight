@@ -174,12 +174,12 @@ def main():
                 for data in net_output_bool[a0_1]:
                     print(int(data), end = '')
 
-                print('] {:.1f} {:.1f}  ['.format(r1_1, env.players[0].hp), end = '')
+                print('] {:.4f} {:.1f}  ['.format(r1_1, env.players[0].hp), end = '')
 
                 for data in net_output_bool[a0_2]:
                     print(int(data), end = '')
 
-                print('] {:.1f} {:.1f}'.format(r1_2, env.players[1].hp))
+                print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
 
             if r1_1 != 0 or random.random() < 0.01: 
                 agent.put(s0_1, a0_1, r1_1, s1_1)
