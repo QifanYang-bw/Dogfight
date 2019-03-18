@@ -113,7 +113,7 @@ params = {
     'gamma': 0.8,
     'epsi_high': 0.9,
     'epsi_low': 0.05,
-    'decay': int(2e4), # Need edit
+    'decay': int(5e5), # Need edit
     'lr': 0.001,
     'buffer_size': 40000,
     'batch_size': 64,
@@ -121,6 +121,7 @@ params = {
     'state_space_dim': Input_Dim,
     'action_space_dim': Output_Dim
 }
+
 
 def main():
 

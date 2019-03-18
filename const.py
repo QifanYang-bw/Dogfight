@@ -49,7 +49,7 @@ net_output_match = [[2], [2, 0], [2, 1],
 
 net_output_bool = [[False for _ in range(5)] for __ in range(Output_Dim)]
 
-net_random_prior = [10, 10, 10, 1, 1, 1, 1, 1, 1, 10, 10, 10, 1, 1, 1, 1, 1, 1]
+net_random_prior = [1] * 18 #[10, 10, 10, 1, 1, 1, 1, 1, 1, 10, 10, 10, 1, 1, 1, 1, 1, 1]
 net_random_prior = list(np.array(net_random_prior) / sum(net_random_prior))
 
 for i in range(Output_Dim):

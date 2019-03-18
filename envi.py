@@ -81,7 +81,7 @@ class Plane(object):
 
         # ------- Reward Settings -------
 
-        self.status_change = 0
+        self.delta_speed = 0
         self.damage_caused = 0
         self.damage_received = 0
 
@@ -207,7 +207,11 @@ class Plane(object):
 
         self.pos = new_pos
         self.accel = new_accel
-        self.speed = (50 * self.speed / 51) + (booster_speed / 51)
+
+        new_speed = (50 * self.speed / 51) + (booster_speed / 51)
+        self.delta_speed = new_speed - self.speed
+        self.speed = new_speed
+
         self._stall = new_stall
 
         if self.firing:
@@ -241,12 +245,13 @@ class Plane(object):
             if not self.on_ground:
                 self.firing = True
 
-        if self.on_ground:
-            self.missile_cooldown = max(self.missile_cooldown, 15)
+        if self.on_ground and self.speed < 1.25:
+            self.missile_cooldown = max(self.missile_cooldown, 5)
+        # print(self.speed)
             # if self.heading == 0: print('yes', self.pos)
 
     def beam_fire(self):
-        self.missile_cooldown = 12
+        self.missile_cooldown = 22
 
         res = hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)
 
@@ -274,8 +279,10 @@ class Plane(object):
             return -1
         elif self.enemy.hp <= 0:
             return 1
+        elif self.damage_caused - self.damage_received != 0:
+            return self.damage_caused - self.damage_received
         else:
-            return self.damage_caused - self.damage_received# + self.status_change + self.speed
+            return self.delta_speed
             # return self.damage_caused - self.enemy.damage_received + self.altitude_change
 
     #     if self.crashed or self.hp <= 0:

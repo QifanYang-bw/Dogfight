@@ -79,7 +79,7 @@ class Agent_RL(object):
         if self.training:
 
             self.optimizer = optim.Adam(self.eval_net.parameters(), lr = self.lr)
-            self.buffer = ExperienceReplay(buffer_size = self.buffer_size, unusual_sample_factor = self.unusual_sample_factor)
+            self.buffer = []#ExperienceReplay(buffer_size = self.buffer_size, unusual_sample_factor = self.unusual_sample_factor)
             self.steps = 0
 
             self.epsi = self.epsi_high
@@ -108,10 +108,14 @@ class Agent_RL(object):
     def put(self, *transition):
         self.steps += 1
 
-        self.buffer.add(transition)
-        
+        # self.buffer.add(transition)
+
+        if len(self.buffer)==self.buffer_size:
+            self.buffer.pop(0)
+        self.buffer.append(transition)
+
     def learn(self):
-        if (self.buffer.length()) < self.batch_size:
+        if len(self.buffer) < self.batch_size:
             return
 
         '''
@@ -121,7 +125,9 @@ class Agent_RL(object):
             s1: state after.
         '''
 
-        samples = self.buffer.sample(self.batch_size)
+        # samples = self.buffer.sample(self.batch_size)
+
+        samples = random.sample(self.buffer, self.batch_size)
 
         s0, a0, r1, s1 = zip(*samples)
         s0 = torch.tensor(s0, dtype=torch.float)
