@@ -3,49 +3,34 @@
 Contains the Game Interface class.
 """
 
-# ------ Temporary Const Def ------
-
-from enum import Enum
-
-# dirname = os.path.dirname(__file__)
-
-class PlayerState(Enum):
-    Human = 0
-    AI_RL = 1
-
-playerlist = [PlayerState.AI_RL, PlayerState.AI_RL]
-
-# ------ Temporary Const Def ------
-
 import sys
 import random
 import pygame as pg
 
+from const import *
 from lib import *
 from envi import *
+from AI_DQN import *
 
 """ Game Constants """
+
+playerlist = [PlayerState.AI_RL, PlayerState.AI_RL]
 
 controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 
 p1_keyseq = [pg.K_LEFT, pg.K_RIGHT, pg.K_UP, pg.K_DOWN, pg.K_COMMA]
 p2_keyseq = [pg.K_a, pg.K_d, pg.K_w, pg.K_s, pg.K_v]
 
-Input_Dim = 18
-Output_Dim = 5
-
 p1_init_pos = vec(100, Bottom_Margin)
 p2_init_pos = vec(540, Bottom_Margin)
-
-# Upper and Lower limit of data, for normalization
-#                 [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.missile_cooldown, _.hp]
-state_upper_bar = [1, Right_Margin,     Top_Margin,    2, 360, 2,  2, 105, 100]
-state_lower_bar = [0, Left_Margin - 30, Bottom_Margin, 0, 0,   0,  0, 0,     0]
 
 """ Initialization """
 
 Image_Path = 'resources/'
 Planeimg_Filename = ['plane1.png', 'plane2.png']
+
+pos_rand_const = 0.6
+step_upper_thresh = 50000
 
 """ The length and size data here consists with the board image.
 """
@@ -87,15 +72,10 @@ class Game(object):
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         self.screen_rect = self.screen.get_rect()
 
-        self.fps = 30
-        self.clock = pg.time.Clock()
-
         self.PlaneImg = []
         for Plane_Filename in Planeimg_Filename:
             curimage = pg.image.load(Image_Path + Plane_Filename).convert_alpha()
             
-            # curimage.set_colorkey((255,255,255))
-            # cursize = curimage.get_size()
             cur_imgresize = pg.transform.scale(curimage, (42, 16))
 
             self.PlaneImg.append(cur_imgresize)
@@ -114,12 +94,18 @@ class Game(object):
         for _ in self.playerdisplay:
             self.all_sprites.add(_)
 
-    def reset(self):
+    def reset(self, rand = 0):
         self.close = False
         self.winner = None
 
-        self.players[0].reset(p1_init_pos.copy())
-        self.players[1].reset(p2_init_pos.copy())
+        if random.random() > rand:
+            self.players[0].reset(p1_init_pos.copy())
+            self.players[1].reset(p2_init_pos.copy())
+        else:
+            self.players[0].random_state()
+            self.players[1].random_state()
+
+            # print(self.players[0]., self.players[1].accel)
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]
@@ -156,10 +142,11 @@ class Game(object):
 
         for obj in self.players:
             if not obj.crashed and obj.hp > 0:
-                alive_count += 1
-
                 obj.frame_control()
                 obj.fly()
+
+            if not obj.crashed and obj.hp > 0:
+                alive_count += 1
 
         if alive_count <= 1:
             self.winner = "No Winner"
@@ -204,9 +191,127 @@ class Game(object):
     def make_move(self, serial, output_state):
         serial -= 1
 
-        with self.players[serial] as p:
-            for i in range(Output_Dim):
+        # print(output_state, net_output_bool[output_state])
 
-                boolValue = random.random() < output_state[i]
+        for i in range(len(controlseq)):
 
-                p.key[controlseq[i]] = boolValue
+            self.players[serial].key[controlseq[i]] = net_output_bool[output_state][i]
+            
+
+params = {
+    'training': True,
+    'gamma': 0.8,
+    'epsi_high': 0.9,
+    'epsi_low': 0.05,
+    'decay': int(2e4), # Need edit
+    'lr': 0.001,
+    'buffer_size': 40000,
+    'batch_size': 64,
+    'unusual_sample_factor': 0.99,
+    'state_space_dim': Input_Dim,
+    'action_space_dim': Output_Dim
+}
+
+def main():
+
+    env = Game()
+
+    agent = Agent_RL(**params)
+
+    score_1 = []
+    mean_1 = []
+
+    agent.load()
+
+    for episode in range(2000):
+        env.reset(rand = max(agent.epsi, pos_rand_const))
+
+        total_reward_p1 = 0 
+        total_reward_p2 = 0
+
+        s0_1 = env.state(serial = 1)
+        s0_2 = env.state(serial = 2)
+
+        r1_1 = env.reward(1)
+        r1_2 = env.reward(2)
+
+        # while True:
+        print('Episode', episode)
+        print('Epsi {:.4f}'.format(agent.epsi))
+
+        _ = 0
+        while _ < step_upper_thresh:
+            _ += 1
+
+            env.clear()
+
+            if env.close:
+                break
+
+            env.draw()
+
+            a0_1 = agent.act(s0_1)
+            a0_2 = agent.act(s0_2)
+
+            env.make_move(1, a0_1)
+            env.make_move(2, a0_2)
+
+            env.update()
+
+            s1_1, s1_2 = env.state(1), env.state(2)
+
+            r1_1 = env.reward(1)
+            r1_2 = env.reward(2)
+
+            if _ % 100 == 0:
+
+                print('Trial', _, end = ' [')
+
+                for data in net_output_bool[a0_1]:
+                    print(int(data), end = '')
+
+                print('] {:.1f} {:.1f}  ['.format(r1_1, env.players[0].hp), end = '')
+
+                for data in net_output_bool[a0_2]:
+                    print(int(data), end = '')
+
+                print('] {:.1f} {:.1f}'.format(r1_2, env.players[1].hp))
+
+            if r1_1 != 0 or random.random() < 0.01:
+                agent.put(s0_1, a0_1, r1_1, s1_1)
+            if r1_2 != 0 or random.random() < 0.01: 
+                agent.put(s0_2, a0_2, r1_2, s1_2)
+            
+            agent.learn()
+
+            total_reward_p1 += r1_1
+            total_reward_p2 += r1_2
+
+            if env.done():
+                break
+
+            s0_1, s0_2 = s1_1, s1_2
+
+        if _ >= step_upper_thresh:
+            print('\nStop current episode with no winner\n')
+
+        if env.close:
+            break
+
+        score_1.append(total_reward_p1 + total_reward_p2)
+        mean_1.append( sum(score_1[-100:])/min(len(score_1), 100))
+
+        if episode % 5 == 0:
+            print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
+            agent.save()
+
+        # agent.plot(score, mean)
+
+    pg.quit()
+    sys.exit()
+
+'''
+Check if main.py is the called program.
+'''
+if __name__ == '__main__':
+    main()

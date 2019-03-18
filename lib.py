@@ -1,35 +1,7 @@
 import math
-# import os
+from const import *
 
 epsilon = 1e-6
-
-WIDTH = 640
-HEIGHT = 320
-
-# Colors (R, G, B)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-
-Top_Margin = 1;
-Left_Margin = 0
-Right_Margin = 640
-Bottom_Margin = 310
-Real_Top_Margin = 0
-Real_Bottom_Margin = 320
-
-Resize_Factor = 0.72
-Plane_Width = 42
-Plane_Height = 16
-
-Control_Stearing = 17
-Power_Stage = 0.05
-Min_Stall = 0
-
-Max_Power = 4
-
 
 class vec(object):
     def __init__(self, *args):

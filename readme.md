@@ -15,4 +15,6 @@ Keyboard settings for player 2:
 - WASD for direction control
 - v for fire
 
-Each player have 100 hp, and a successful hit takes away 50 hp.
+Each player have 5 hp, and a successful hit takes away 1 hp.
+
+https://medium.com/ml-everything/reinforcement-learning-with-sparse-rewards-8f15b71d18bf

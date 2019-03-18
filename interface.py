@@ -11,6 +11,33 @@ from envi import *
 
 """ Game Constants """
 
+playerlist = [PlayerState.Human, PlayerState.AI_Random]
+
+if playerlist[0] != PlayerState.Human or playerlist[1] != PlayerState.Human:
+    AI_Included = True
+else:
+    AI_Included = False 
+
+if AI_Included:
+    from AI_DQN import *
+
+    params = {
+        'training': False,
+        'state_space_dim': Input_Dim,
+        'action_space_dim': Output_Dim
+        # 'epsi_high': 0.0,
+        # 'epsi_low': 0.0,
+        # 'lr': 0.001,
+        # 'gamma': 0.8,
+        # 'decay': int(1e6),
+        # 'capacity': 40000,
+        # 'batch_size': 64
+    }
+
+    RLAgent = Agent_RL(**params)
+    RLAgent.load()
+
+
 controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 
 p1_keyseq = [pg.K_LEFT, pg.K_RIGHT, pg.K_UP, pg.K_DOWN, pg.K_COMMA]
@@ -93,12 +120,24 @@ class Game(object):
 
     def event_loop(self):
 
-        # for p in self.players:
-        #     if p.controller == PlayerState.AI_RL:
-        #         output_key = RLagent.think(p)
+        # --------  AI Control  --------
 
-        #         for i in range(len(output_key)):
-        #             p.key[controlseq[i]] = output_key[i]
+        for serial in range(2):
+
+            p = self.players[serial]
+
+            if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
+                cur_state = self.state(serial + 1)
+
+                if p.controller == PlayerState.AI_RL:
+                    output_act = RLAgent.act(cur_state)
+                elif p.controller == PlayerState.AI_Random:
+                    output_act = RLAgent.act(cur_state, epsi = 1)
+
+                for i in range(len(controlseq)):
+                    self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
+
+        # -------- Human Control --------
 
         for event in pg.event.get():
 
@@ -127,22 +166,22 @@ class Game(object):
                                 p.key[controlseq[i]] = boolValue
                                 break
 
-
     def update(self):
         alive_count = 0
 
         for obj in self.players:
             if not obj.crashed and obj.hp > 0:
-                alive_count += 1
-
                 obj.frame_control()
                 obj.fly()
+
+            if not obj.crashed and obj.hp > 0:
+                alive_count += 1
 
         if alive_count <= 1:
             self.winner = "No Winner"
             for obj_num in range(len(self.players)):
                 if not self.players[obj_num].crashed and self.players[obj_num].hp > 0:
-                    self.winner = 'Player ' + str(obj_num)
+                    self.winner = 'Player ' + str(obj_num + 1)
 
     def draw(self):
 
@@ -177,6 +216,26 @@ class Game(object):
 
         while not self.close:
             self.event_loop()
+
+    def state(self, serial):
+        serial -= 1
+
+        cur_player = self.players[serial]
+
+        cur_state = []
+
+        for _ in [cur_player, cur_player.enemy]:
+
+            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, \
+                      _.missile_cooldown, _.hp]
+
+            for i in range(len(_state)):
+                _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
+            cur_state += _state
+
+        return cur_state
+
 
 def main():
     game = Game()
