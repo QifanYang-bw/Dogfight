@@ -24,7 +24,7 @@ step_upper_thresh = 50000
 
 """ Initialization """
 
-pos_rand_const = 0.5
+pos_rand_const = 0.4
 
 class Game(object):
     def __init__(self):
@@ -134,8 +134,8 @@ def main():
 
     agent.load()
 
-    for episode in range(20000):
-        env.reset(rand = max(agent.epsi, pos_rand_const))
+    for episode in range(100000):
+        env.reset(rand = min(((1 - agent.epsi) ** 2) / 2, pos_rand_const))
 
         total_reward_p1 = 0 
         total_reward_p2 = 0

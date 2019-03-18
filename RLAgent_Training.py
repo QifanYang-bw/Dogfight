@@ -202,7 +202,7 @@ params = {
     'training': True,
     'gamma': 0.95,
     'epsi_high': 0.9,
-    'epsi_low': 0.001,
+    'epsi_low': 0.05,
     'decay': int(5e5), # Need edit
     'lr': 0.001,
     'buffer_size': 40000,
@@ -224,7 +224,7 @@ def main():
     agent.load()
 
     for episode in range(2000):
-        env.reset(rand = min(agent.epsi, pos_rand_const))
+        env.reset(rand = min(((1 - agent.epsi) ** 2) / 2, pos_rand_const))
 
         total_reward_p1 = 0 
         total_reward_p2 = 0
