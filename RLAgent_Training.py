@@ -122,13 +122,15 @@ class Game(object):
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, \
-                      _.missile_cooldown, _.hp]
+            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
 
             for i in range(len(_state)):
                 _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
 
-            cur_state += _state
+            if _ == cur_player:
+                cur_state += _state
+            else:
+                cur_state += _state[1:]
 
         return cur_state
 

@@ -2,7 +2,7 @@ import math
 import random
 from lib import *
 
-Initial_HP = 5
+Initial_HP = 10
 Damage_per_hit = 1
 
 KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire'] #Missile
@@ -81,7 +81,7 @@ class Plane(object):
 
         # ------- Reward Settings -------
 
-        self.delta_speed = 0
+        # self.delta_speed = 0
         self.damage_caused = 0
         self.damage_received = 0
 
@@ -209,7 +209,7 @@ class Plane(object):
         self.accel = new_accel
 
         new_speed = (50 * self.speed / 51) + (booster_speed / 51)
-        self.delta_speed = new_speed - self.speed
+        # self.delta_speed = new_speed - self.speed
         self.speed = new_speed
 
         self._stall = new_stall
@@ -276,13 +276,15 @@ class Plane(object):
     def score(self):
         # print(self.altitude_change)
         if self.crashed:
-            return -1
+            return -2
         elif self.enemy.hp <= 0:
-            return 1
+            return 2
         elif self.damage_caused - self.damage_received != 0:
             return self.damage_caused - self.damage_received
         else:
-            return self.delta_speed
+            return 0
+        # else:
+        #     return self.delta_speed
             # return self.damage_caused - self.enemy.damage_received + self.altitude_change
 
     #     if self.crashed or self.hp <= 0:
