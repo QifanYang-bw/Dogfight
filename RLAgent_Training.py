@@ -226,7 +226,7 @@ def main():
     agent.load()
 
     for episode in range(2000):
-        env.reset(rand = min(((1 - agent.epsi) ** 2) / 2, pos_rand_const))
+        env.reset(rand = min((1 - agent.epsi) / 2, pos_rand_const))
 
         total_reward_p1 = 0 
         total_reward_p2 = 0
@@ -279,15 +279,15 @@ def main():
 
                 print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
 
-            if r1_1 != 0 or random.random() < 0.01:
+            if r1_1 != 0 or random.random() < 0.05:
                 agent.put(s0_1, a0_1, r1_1, s1_1)
-            if r1_2 != 0 or random.random() < 0.01: 
+            if r1_2 != 0 or random.random() < 0.05: 
                 agent.put(s0_2, a0_2, r1_2, s1_2)
             
             agent.learn()
 
-            total_reward_p1 += r1_1
-            total_reward_p2 += r1_2
+            total_reward_p1 += r1_1 * (int(r1_1 >= 1) + 1)
+            total_reward_p2 += r1_2 * (int(r1_1 >= 1) + 1)
 
             if env.done():
                 break
