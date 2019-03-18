@@ -11,7 +11,7 @@ from envi import *
 
 """ Game Constants """
 
-playerlist = [PlayerState.Human, PlayerState.Human]
+playerlist = [PlayerState.Human, PlayerState.AI_RL]
 
 if playerlist[0] != PlayerState.Human or playerlist[1] != PlayerState.Human:
     AI_Included = True
@@ -128,10 +128,11 @@ class Game(object):
 
             if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
                 cur_state = self.state(serial + 1)
+                # print(cur_state)
 
                 if p.controller == PlayerState.AI_RL:
                     output_act = RLAgent.act(cur_state)
-                elif p.controller == PlayerState.AI_Random:
+                elif p.controller == PlayerStawte.AI_Random:
                     output_act = RLAgent.act(cur_state, epsi = 1)
 
                 for i in range(len(controlseq)):
@@ -208,7 +209,7 @@ class Game(object):
             self.event_loop()
             self.update()
 
-            dt = self.clock.tick(self.fps)
+            # dt = self.clock.tick(self.fps)
             self.draw()
             # pg.display.update()
 

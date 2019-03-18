@@ -200,9 +200,9 @@ class Game(object):
 
 params = {
     'training': True,
-    'gamma': 0.8,
+    'gamma': 0.95,
     'epsi_high': 0.9,
-    'epsi_low': 0.05,
+    'epsi_low': 0.001,
     'decay': int(5e5), # Need edit
     'lr': 0.001,
     'buffer_size': 40000,
