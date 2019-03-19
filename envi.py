@@ -2,8 +2,8 @@ import math
 import random
 from lib import *
 
-Initial_HP = 10
-Damage_per_hit = 1
+Initial_HP = 20
+Damage_per_hit = 2
 
 KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire'] #Missile
 
@@ -175,9 +175,9 @@ class Plane(object):
             else:
                 self.rotation = 0
 
-            if self.heading == 1 and (cur_rotat > 10 and cur_rotat < 355):
+            if self.heading == 1 and (cur_rotat > 15 and cur_rotat < 345):
                 vertical_force = 50
-            if self.heading == 0 and (cur_rotat < 170 or cur_rotat > 185):
+            if self.heading == 0 and (cur_rotat < 165 or cur_rotat > 195):
                 vertical_force = 50
 
             new_pos.y = Bottom_Margin
@@ -265,16 +265,20 @@ class Plane(object):
         self.enemy.damage_received = 0
 
     def score(self):
-        targeting = int(self.pos.y < Bottom_Margin - 5 and hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)[0])
+        ans = 0
+        targeting = self.pos.y < Bottom_Margin - 5 and hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)[0]
 
         if self.crashed:
-            return -2
-        elif self.enemy.hp <= 0:
-            return 2
-        elif self.damage_caused - self.damage_received != 0:
-            return self.damage_caused - self.damage_received + targeting * 0.3
-        else:
-            return targeting * 0.3
+            ans -= 2
+        if self.pos.y < Bottom_Margin - 5:
+            ans += 1
+        if targeting:
+            ans += 1
+        if self.enemy.hp <= 0:
+            ans += 1
+        ans += self.damage_caused - self.damage_received
+        return ans
+
         # else:
         #     return self.delta_speed
             # return self.damage_caused - self.enemy.damage_received + self.altitude_change

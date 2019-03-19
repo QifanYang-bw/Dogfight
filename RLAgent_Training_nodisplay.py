@@ -148,7 +148,7 @@ def main():
         r1_1 = env.reward(1)
         r1_2 = env.reward(2)
 
-        if episode % 500 == 0:
+        if episode % 100 == 0:
             print('Episode', episode)
             print('Epsi {:.4f}'.format(agent.epsi))
 
@@ -169,7 +169,7 @@ def main():
             r1_1 = env.reward(1)
             r1_2 = env.reward(2)
 
-            if episode % 500 == 0:
+            if episode % 100 == 0:
                 if _ % 500 == 0:
                     print('Trial', _, end = ' [')
 
@@ -182,8 +182,6 @@ def main():
                         print(int(data), end = '')
 
                     print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
-
-                    print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
 
             if r1_1 != 0 or random.random() < 0.01: 
                 agent.put(s0_1, a0_1, r1_1, s1_1)
@@ -201,8 +199,9 @@ def main():
             s0_1, s0_2 = s1_1, s1_2
 
 
-        if episode % 500 == 0:
+        if episode % 100 == 0:
             print('Episode', episode, 'ends\n')
+            print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
             agent.save()
 
         if _ > 10000 and _ % 10000 == 0:
