@@ -199,6 +199,9 @@ def main():
             s0_1, s0_2 = s1_1, s1_2
 
 
+        score_1.append(total_reward_p1 + total_reward_p2)
+        mean_1.append( sum(score_1[-100:])/min(len(score_1), 100))
+        
         if episode % 100 == 0:
             print('Episode', episode, 'ends\n')
             print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
@@ -213,8 +216,6 @@ def main():
         if env.close:
             break
 
-        score_1.append(total_reward_p1 + total_reward_p2)
-        mean_1.append( sum(score_1[-100:])/min(len(score_1), 100))
 
         # agent.plot(score, mean)
 
