@@ -115,7 +115,7 @@ params = {
     'gamma': 0.96,
     'epsi_high': 0.9,
     'epsi_low': 0.1,
-    'decay': int(3e5), # Need edit
+    'decay': int(1e5), # Need edit
     'lr': 0.001,
     'buffer_size': 40000,
     'batch_size': 64,
@@ -183,9 +183,9 @@ def main():
 
                     print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
 
-            if r1_1 != 0 or random.random() < 0.01: 
+            if r1_1 != 0 or random.random() < 1: 
                 agent.put(s0_1, a0_1, r1_1, s1_1)
-            if r1_2 != 0 or random.random() < 0.01: 
+            if r1_2 != 0 or random.random() < 1: 
                 agent.put(s0_2, a0_2, r1_2, s1_2)
             
             agent.learn()
@@ -201,7 +201,7 @@ def main():
 
         score_1.append(total_reward_p1 + total_reward_p2)
         mean_1.append( sum(score_1[-100:])/min(len(score_1), 100))
-        
+
         if episode % 100 == 0:
             print('Episode', episode, 'ends\n')
             print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))

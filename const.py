@@ -38,7 +38,7 @@ class PlayerState(Enum):
 #controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 
 Input_Dim = 15
-Output_Dim = 3
+Output_Dim = 2
 
 # net_output_match = [[2], [2, 0], [2, 1],
 # 					[] , [   0], [   1],
@@ -47,7 +47,7 @@ Output_Dim = 3
 # 					[   4], [   0, 4], [   1, 4],
 # 					[3, 4], [3, 0, 4], [3, 1, 4]]
 
-net_output_match = [[2, 4], [2, 0, 4], [2, 1, 4]]
+net_output_match = [[2, 0, 4], [2, 1, 4]]
 
 net_output_bool = [[False for _ in range(5)] for __ in range(Output_Dim)]
 
