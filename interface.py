@@ -11,7 +11,7 @@ from envi import *
 
 """ Game Constants """
 
-playerlist = [PlayerState.AI_RL, PlayerState.Human]
+playerlist = [PlayerState.Human, PlayerState.AI_RL]
 
 if playerlist[0] != PlayerState.Human or playerlist[1] != PlayerState.Human:
     AI_Included = True
@@ -132,7 +132,7 @@ class Game(object):
 
                 if p.controller == PlayerState.AI_RL:
                     output_act = RLAgent.act(cur_state)
-                elif p.controller == PlayerStawte.AI_Random:
+                elif p.controller == PlayerState.AI_Random:
                     output_act = RLAgent.act(cur_state, epsi = 1)
 
                 for i in range(len(controlseq)):

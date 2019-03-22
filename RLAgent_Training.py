@@ -209,7 +209,6 @@ params = {
     'lr': 0.001,
     'buffer_size': 40000,
     'batch_size': 64,
-    'unusual_sample_factor': 0.99,
     'state_space_dim': Input_Dim,
     'action_space_dim': Output_Dim
 }

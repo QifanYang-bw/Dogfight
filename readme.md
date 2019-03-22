@@ -17,4 +17,7 @@ Keyboard settings for player 2:
 
 Each player have 5 hp, and a successful hit takes away 1 hp.
 
+
+Cite:
+
 https://medium.com/ml-everything/reinforcement-learning-with-sparse-rewards-8f15b71d18bf

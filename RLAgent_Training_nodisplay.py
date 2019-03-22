@@ -119,7 +119,6 @@ params = {
     'lr': 0.001,
     'buffer_size': 40000,
     'batch_size': 64,
-    'unusual_sample_factor': 0.99,
     'state_space_dim': Input_Dim,
     'action_space_dim': Output_Dim
 }
@@ -137,7 +136,7 @@ def main():
     agent.load()
 
     for episode in range(100000):
-        env.reset(rand = min((1 - agent.epsi) / 2, pos_rand_const))
+        env.reset(rand = pos_rand_const)
 
         total_reward_p1 = 0 
         total_reward_p2 = 0
