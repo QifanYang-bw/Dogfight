@@ -225,7 +225,11 @@ def main():
     agent.load()
 
     for episode in range(2000):
+        rands = min((1 - agent.epsi) / 2.5, pos_rand_const)
         env.reset(rand = min((1 - agent.epsi) / 2, pos_rand_const))
+
+        if rands > 0.25:
+            agent.lr = 0.0001
 
         total_reward_p1 = 0 
         total_reward_p2 = 0
@@ -238,7 +242,7 @@ def main():
 
         # while True:
         print('Episode', episode)
-        print('Epsi {:.4f}'.format(agent.epsi))
+        print('Epsi {:.4f}, Step {}, lr {:.4f}'.format(agent.epsi, agent.steps, agent.lr), )
 
         _ = 0
         while _ < step_upper_thresh:
