@@ -11,7 +11,7 @@ from envi import *
 
 """ Game Constants """
 
-playerlist = [PlayerState.Human, PlayerState.AI_RL]
+playerlist = [PlayerState.AI_RL, PlayerState.AI_RL]
 
 if playerlist[0] != PlayerState.Human or playerlist[1] != PlayerState.Human:
     AI_Included = True

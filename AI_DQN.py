@@ -82,6 +82,12 @@ class Agent_RL(object):
             self.buffer.pop(0)
         self.buffer.append(transition)
 
+    def __lr_modify(self):
+        if self.steps < 32000:
+            self.lr = 0.001
+        else:
+            self.lr = 0.0001
+
     def learn(self):
         if len(self.buffer) < self.batch_size:
             return
@@ -112,6 +118,8 @@ class Agent_RL(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        self.__lr_modify()
 
     def save(self):
         if not self.training:

@@ -135,7 +135,7 @@ def main():
 
     agent.load()
 
-    for episode in range(100000):
+    for episode in range(20000):
         env.reset(rand = pos_rand_const)
 
         total_reward_p1 = 0 
@@ -218,7 +218,6 @@ def main():
 
         # agent.plot(score, mean)
 
-    pg.quit()
     sys.exit()
 
 '''
