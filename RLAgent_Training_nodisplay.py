@@ -136,8 +136,9 @@ def main():
     agent.load()
 
     for episode in range(20000):
-        rands = min((1 - agent.epsi) / 2.5, pos_rand_const)
-        env.reset(rand = min((1 - agent.epsi) / 2, pos_rand_const))
+        rands = min((1 - agent.epsi) / 4, pos_rand_const)
+
+        env.reset(rand = rands)
 
         if rands > 0.25:
             agent.lr = 0.0001
