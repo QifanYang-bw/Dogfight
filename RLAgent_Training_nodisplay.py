@@ -24,7 +24,7 @@ step_upper_thresh = 50000
 
 """ Initialization """
 
-pos_rand_const = 0.4
+pos_rand_const = 0.3
 
 class Game(object):
     def __init__(self):

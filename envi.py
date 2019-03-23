@@ -50,7 +50,7 @@ class Plane(object):
 
         self.missile_cooldown = 0
 
-        self.hp = Initial_HP
+        self.hp = __srand(lower = 2, upper = 4)
 
     def reset(self, init_pos):
 
@@ -152,13 +152,6 @@ class Plane(object):
 
         if new_pos.x > Right_Margin:
             new_pos.x = Left_Margin - 30
-
-        # if (self._name == "f1"):
-        #     self_control(this)
-        # else:
-        #     enemy_control(this)
-        #    if ((self.damage > rep_damage) && (!repire_on)) {
-        #        repire_box_activated()
 
         # -----------------------------------------------------------------------------------------------
         # Landing Check
@@ -278,16 +271,5 @@ class Plane(object):
             ans += 1
         ans += self.damage_caused - self.damage_received
         return ans
-
-        # else:
-        #     return self.delta_speed
-            # return self.damage_caused - self.enemy.damage_received + self.altitude_change
-
-    #     if self.crashed or self.hp <= 0:
-    #         return 0.
-    #     elif self.enemy.hp == 0:
-    #         return 1.
-    #     else:
-    #         return self.hp * 0.005 + (100 - self.enemy.hp) * 0.005
 
 

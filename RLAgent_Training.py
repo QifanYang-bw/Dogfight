@@ -29,8 +29,9 @@ p2_init_pos = vec(540, Bottom_Margin)
 Image_Path = 'resources/'
 Planeimg_Filename = ['plane1.png', 'plane2.png']
 
-pos_rand_const = 0.6
 step_upper_thresh = 50000
+
+pos_rand_const = 0.3
 
 """ The length and size data here consists with the board image.
 """
@@ -204,7 +205,7 @@ params = {
     'training': True,
     'gamma': 0.95,
     'epsi_high': 0.9,
-    'epsi_low': 0.05,
+    'epsi_low': 0.1,
     'decay': int(1e5), # Need edit
     'lr': 0.001,
     'buffer_size': 40000,
@@ -225,8 +226,9 @@ def main():
     agent.load()
 
     for episode in range(2000):
-        rands = min((1 - agent.epsi) / 2.5, pos_rand_const)
-        env.reset(rand = min((1 - agent.epsi) / 2, pos_rand_const))
+        rands = min((1 - agent.epsi) / 4, pos_rand_const)
+
+        env.reset(rand = rands)
 
         if rands > 0.25:
             agent.lr = 0.0001

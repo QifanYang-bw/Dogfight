@@ -11,12 +11,19 @@ from envi import *
 
 """ Game Constants """
 
-playerlist = [PlayerState.Human, PlayerState.AI_RL]
+playerlist = [PlayerState.AI_RL, PlayerState.AI_Hardcoded]
 
-if playerlist[0] != PlayerState.Human or playerlist[1] != PlayerState.Human:
-    AI_Included = True
-else:
-    AI_Included = False 
+""" Import Multiple AIs """
+
+AI_Included = False
+HardCoded_Included = False
+
+for player_stat in playerlist:
+    if player_stat == PlayerState.AI_RL or player_stat == PlayerState.AI_Random:
+        AI_Included = True
+    elif player_stat == PlayerState.AI_Hardcoded:
+        HardCoded_Included = True
+
 
 if AI_Included:
     from AI_DQN import *
@@ -25,17 +32,15 @@ if AI_Included:
         'training': False,
         'state_space_dim': Input_Dim,
         'action_space_dim': Output_Dim
-        # 'epsi_high': 0.0,
-        # 'epsi_low': 0.0,
-        # 'lr': 0.001,
-        # 'gamma': 0.8,
-        # 'decay': int(1e6),
-        # 'capacity': 40000,
-        # 'batch_size': 64
     }
 
     RLAgent = Agent_RL(**params)
     RLAgent.load()
+
+if HardCoded_Included:
+    from AI_hardcoded import *
+
+    HCAgent = Agent_Hardcoded()
 
 
 controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
@@ -98,8 +103,6 @@ class Game(object):
         for Plane_Filename in Planeimg_Filename:
             curimage = pg.image.load(Image_Path + Plane_Filename).convert_alpha()
             
-            # curimage.set_colorkey((255,255,255))
-            # cursize = curimage.get_size()
             cur_imgresize = pg.transform.scale(curimage, (42, 16))
 
             self.PlaneImg.append(cur_imgresize)
@@ -122,21 +125,35 @@ class Game(object):
 
         # --------  AI Control  --------
 
-        for serial in range(2):
+        if AI_Included:
 
-            p = self.players[serial]
+            for serial in range(2):
 
-            if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
-                cur_state = self.state(serial + 1)
-                # print(cur_state)
+                p = self.players[serial]
 
-                if p.controller == PlayerState.AI_RL:
-                    output_act = RLAgent.act(cur_state)
-                elif p.controller == PlayerState.AI_Random:
-                    output_act = RLAgent.act(cur_state, epsi = 1)
+                if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
+                    cur_state = self.state(serial + 1)
 
-                for i in range(len(controlseq)):
-                    self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
+                    if p.controller == PlayerState.AI_RL:
+                        output_act = RLAgent.act(cur_state)
+                    elif p.controller == PlayerState.AI_Random:
+                        output_act = RLAgent.act(cur_state, epsi = 1)
+
+                    for i in range(len(controlseq)):
+                        self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
+
+
+        if HardCoded_Included:
+
+            for serial in range(2):
+
+                p = self.players[serial]
+
+                if p.controller == PlayerState.AI_Hardcoded:
+                    output_set = HCAgent.act(p)
+
+                    for i in range(len(controlseq)):
+                        self.players[serial].key[controlseq[i]] = output_set[i]
 
         # -------- Human Control --------
 

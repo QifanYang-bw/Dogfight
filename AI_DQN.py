@@ -65,11 +65,9 @@ class Agent_RL(object):
 
         if random.random() < epsi:
             a0 = np.random.choice(self.action_space_dim, p = net_random_prior)
-            # print('r', a0)
         else:
             s0 = torch.tensor(s0, dtype = torch.float).view(1, -1)
             a0 = torch.argmax(self.eval_net(s0)).item()
-            # print('a', a0)
 
         return a0
 
@@ -83,11 +81,12 @@ class Agent_RL(object):
         self.buffer.append(transition)
 
     def __lr_modify(self):
-        pass
-        # if self.steps < 200000:
-        #     self.lr = 0.001
-        # else:
-        #     self.lr = 0.0001
+        if self.steps < 50000:
+            self.lr = 0.01
+        elif self.steps < 500000:
+            self.lr = 0.001
+        else:
+            self.lr = 0.0001
 
     def learn(self):
         if len(self.buffer) < self.batch_size:
@@ -159,10 +158,10 @@ class Agent_RL(object):
             checkpoint = torch.load(file_path)
 
             self.eval_net.load_state_dict(checkpoint['model_state_dict'])
+            self.steps = checkpoint['epoch']
 
             if self.training:
                 self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-                self.steps = checkpoint['epoch']
                 self.lr = checkpoint['lr']
 
             self.eval_net.eval()
