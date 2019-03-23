@@ -81,9 +81,9 @@ class Agent_RL(object):
         self.buffer.append(transition)
 
     def __lr_modify(self):
-        if self.steps < 50000:
+        if self.steps < 40000:
             self.lr = 0.01
-        elif self.steps < 500000:
+        elif self.steps < 400000:
             self.lr = 0.001
         else:
             self.lr = 0.0001
