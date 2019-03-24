@@ -1,4 +1,4 @@
-""" interface.py
+"""
 
 Contains the Game Interface class.
 """
@@ -11,7 +11,7 @@ from envi import *
 
 """ Game Constants """
 
-playerlist = [PlayerState.AI_RL, PlayerState.AI_Hardcoded]
+playerlist = [PlayerState.Human, PlayerState.AI_Hardcoded]
 
 """ Import Multiple AIs """
 
@@ -89,7 +89,10 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center = self.pos)
 
 class Game(object):
-    def __init__(self):
+    def __init__(self, mute = False):
+
+        self.mute = mute
+
         self.close = False
         self.winner = None
 
@@ -109,8 +112,8 @@ class Game(object):
 
         self.all_sprites = pg.sprite.Group()
 
-        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy()),
-                        Plane(playerlist[1], 1, p2_init_pos.copy())]
+        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy(), mute = self.mute),
+                        Plane(playerlist[1], 1, p2_init_pos.copy(), mute = self.mute)]
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]

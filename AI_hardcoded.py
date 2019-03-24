@@ -13,6 +13,9 @@ class Agent_Hardcoded(object):
 
     def act(self, cur):
 
+        def rand01(thres):
+            return int(random.random() <= thres)
+
         def facingright(cur):
 
             if cur.rotation >= 90 and cur.rotation < 270:
@@ -40,6 +43,25 @@ class Agent_Hardcoded(object):
 
             return ans
 
+
+        def taking_off(cur):
+            ans = [False, False, True, False, True]
+
+            facing_right = facingright(cur)
+
+            st = stat(cur.rotation, facing_right)
+
+
+            if st == 0 or st == -1:
+                turn = 1
+            elif st == 1:
+                turn = 0
+
+            if facing_right: turn = 1 - turn
+
+            ans[turn] = True
+            return ans
+
         def heading_up(cur):
             ans = [False, False, True, False, True]
 
@@ -48,12 +70,10 @@ class Agent_Hardcoded(object):
             st = stat(cur.rotation, facing_right)
 
 
-            # print(cur.heading, cur.rotation, facing_right, st)
-
             if st == 0 or st == -1:
-                turn = 1
+                turn = rand01(0.75)
             elif st == 1:
-                turn = 0
+                turn = rand01(0.25)
 
             if facing_right: turn = 1 - turn
 
@@ -67,9 +87,9 @@ class Agent_Hardcoded(object):
             st = stat(cur.rotation, facing_right)
 
             if st == -1:
-                turn = 1
+                turn = rand01(0.75)
             elif st == 0 or st == 1:
-                turn = 0
+                turn = rand01(0.25)
 
             if facing_right: turn = 1 - turn
 
@@ -84,11 +104,11 @@ class Agent_Hardcoded(object):
             st = stat(cur.rotation, facing_right)
 
             if st == 0:
-                turn = int(random.random() >= 0.5)
+                turn = rand01(0.5)
             elif st == 1:
-                turn = 0
+                turn = rand01(0.25)
             elif st == -1:
-                turn = 1
+                turn = rand01(0.75)
 
             if facing_right: turn = 1 - turn
 
@@ -97,6 +117,8 @@ class Agent_Hardcoded(object):
 
         #controlseq : ['Left', 'Right', 'Up', 'Down', 'Fire']
 
+        if cur.pos.y > Bottom_Margin - 10:
+            return taking_off(cur)
         if cur.pos.y > self.lower:
             return heading_up(cur)
         elif cur.pos.y < self.upper:
