@@ -19,62 +19,30 @@ def bar():
 
 class Net(nn.Module):
 
-    def __init__(self, input_size, hidden1_size, hidden2_size, output_size):
+    def __init__(self, input_size, output_size):
         super().__init__()
 
-        self.linear1 = nn.Linear(input_size, hidden1_size)
-        self.linear2 = nn.Linear(hidden1_size, hidden2_size)
-        self.linear3 = nn.Linear(hidden2_size, output_size)
+        hidden_size = [72, 324, 72]
+
+        self.linear1 = nn.Linear(input_size, hidden_size[0])
+        self.linear2 = nn.Linear(hidden_size[0], hidden_size[1])
+        self.linear3 = nn.Linear(hidden_size[1], hidden_size[2])
+        self.linear4 = nn.Linear(hidden_size[2], output_size)
 
     def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = torch.sigmoid(self.linear2(x))
-        x = self.linear3(x)
+        x = torch.sigmoid(self.linear1(x))
+        x = F.relu(self.linear2(x))
+        x = F.relu(self.linear3(x))
+        x = self.linear4(x)
         return x
 
-# class ExperienceReplay:
-#     def __init__(self, buffer_size = 50000, unusual_sample_factor = 0.99):
-#         """ Data structure used to hold game experiences """
-#         # Buffer will contain [state,action,reward,next_state,done]
-#         self.buffer = []
-#         self.buffer_size = buffer_size
-        
-#         assert unusual_sample_factor <= 1, "unusual_sample_factor has to be <= 1"
-#         # Setting this value to a low number over-samples experience that had unusually high or
-#         # low rewards
-#         self.unusual_sample_factor = unusual_sample_factor
-    
-#     def add(self, experience):
-#         """ Adds list of experiences to the buffer """
-#         # Extend the stored experiences
-#         self.buffer.append(experience)
-#         # Keep the last buffer_size number of experiences
-#         self.buffer = self.buffer[-self.buffer_size:]
-#         # Keep the extreme values near the top of the buffer for oversampling
-
-#     def length(self):
-#         return len(self.buffer)
-        
-#     def sample(self, size):
-#         """ Returns a sample of experiences from the buffer """
-#         # We want to over-sample frames where things happened. So we'll sort the buffer on the absolute reward 
-#         # (either positive or negative) and apply a geometric probability in order to bias our sampling to the 
-#         # earlier (more extreme) replays
-
-#         buffer = sorted(self.buffer, key=lambda replay: abs(replay[2]), reverse=True)
-#         p = np.array([self.unusual_sample_factor ** i for i in range(len(buffer))])
-#         p = p / sum(p)
-#         sample_idxs = np.random.choice(np.arange(len(buffer)), size = size, p = p)
-#         sample_output = [buffer[idx] for idx in sample_idxs]
-#         sample_output = np.reshape(sample_output,(size,-1))
-#         return sample_output
 
 class Agent_RL(object):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.eval_net = Net(self.state_space_dim, 324, 72, self.action_space_dim)
+        self.eval_net = Net(self.state_space_dim, self.action_space_dim)
 
         if self.training:
 
@@ -97,11 +65,9 @@ class Agent_RL(object):
 
         if random.random() < epsi:
             a0 = np.random.choice(self.action_space_dim, p = net_random_prior)
-            # print('r', a0)
         else:
             s0 = torch.tensor(s0, dtype = torch.float).view(1, -1)
             a0 = torch.argmax(self.eval_net(s0)).item()
-            # print('a', a0)
 
         return a0
 
@@ -113,6 +79,14 @@ class Agent_RL(object):
         if len(self.buffer)==self.buffer_size:
             self.buffer.pop(0)
         self.buffer.append(transition)
+
+    def __lr_modify(self):
+        if self.steps < 40000:
+            self.lr = 0.01
+        elif self.steps < 400000:
+            self.lr = 0.001
+        else:
+            self.lr = 0.0001
 
     def learn(self):
         if len(self.buffer) < self.batch_size:
@@ -144,6 +118,8 @@ class Agent_RL(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        self.__lr_modify()
 
     def save(self):
         if not self.training:
@@ -182,10 +158,10 @@ class Agent_RL(object):
             checkpoint = torch.load(file_path)
 
             self.eval_net.load_state_dict(checkpoint['model_state_dict'])
+            self.steps = checkpoint['epoch']
 
             if self.training:
                 self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-                self.steps = checkpoint['epoch']
                 self.lr = checkpoint['lr']
 
             self.eval_net.eval()
@@ -198,6 +174,7 @@ class Agent_RL(object):
         else:
 
             print("Checkpoint loaded successfully")
+            print("Steps:", checkpoint['epoch'])
 
         bar()
         print()

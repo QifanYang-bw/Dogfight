@@ -29,8 +29,9 @@ p2_init_pos = vec(540, Bottom_Margin)
 Image_Path = 'resources/'
 Planeimg_Filename = ['plane1.png', 'plane2.png']
 
-pos_rand_const = 0.6
 step_upper_thresh = 50000
+
+pos_rand_const = 0.3
 
 """ The length and size data here consists with the board image.
 """
@@ -122,13 +123,15 @@ class Game(object):
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, \
-                      _.missile_cooldown, _.hp]
+            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
 
             for i in range(len(_state)):
                 _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
 
-            cur_state += _state
+            if _ == cur_player:
+                cur_state += _state
+            else:
+                cur_state += _state[1:]
 
         return cur_state
 
@@ -202,12 +205,11 @@ params = {
     'training': True,
     'gamma': 0.95,
     'epsi_high': 0.9,
-    'epsi_low': 0.05,
-    'decay': int(5e5), # Need edit
+    'epsi_low': 0.1,
+    'decay': int(1e5), # Need edit
     'lr': 0.001,
     'buffer_size': 40000,
     'batch_size': 64,
-    'unusual_sample_factor': 0.99,
     'state_space_dim': Input_Dim,
     'action_space_dim': Output_Dim
 }
@@ -224,7 +226,12 @@ def main():
     agent.load()
 
     for episode in range(2000):
-        env.reset(rand = min(((1 - agent.epsi) ** 2) / 2, pos_rand_const))
+        rands = min((1 - agent.epsi) / 4, pos_rand_const)
+
+        env.reset(rand = rands)
+
+        if rands > 0.25:
+            agent.lr = 0.0001
 
         total_reward_p1 = 0 
         total_reward_p2 = 0
@@ -237,7 +244,7 @@ def main():
 
         # while True:
         print('Episode', episode)
-        print('Epsi {:.4f}'.format(agent.epsi))
+        print('Epsi {:.4f}, Step {}, lr {:.4f}'.format(agent.epsi, agent.steps, agent.lr), )
 
         _ = 0
         while _ < step_upper_thresh:
@@ -277,15 +284,15 @@ def main():
 
                 print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
 
-            if r1_1 != 0 or random.random() < 0.01:
+            if r1_1 != 0 or random.random() < 1:
                 agent.put(s0_1, a0_1, r1_1, s1_1)
-            if r1_2 != 0 or random.random() < 0.01: 
+            if r1_2 != 0 or random.random() < 1: 
                 agent.put(s0_2, a0_2, r1_2, s1_2)
             
             agent.learn()
 
-            total_reward_p1 += r1_1
-            total_reward_p2 += r1_2
+            total_reward_p1 += r1_1 * (int(r1_1 >= 1) + 1)
+            total_reward_p2 += r1_2 * (int(r1_1 >= 1) + 1)
 
             if env.done():
                 break

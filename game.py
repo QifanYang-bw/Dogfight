@@ -1,4 +1,4 @@
-""" interface.py
+"""
 
 Contains the Game Interface class.
 """
@@ -9,14 +9,16 @@ from const import *
 from lib import *
 from envi import *
 
-""" Game Constants """
+""" Import Multiple AIs """
 
-playerlist = [PlayerState.AI_RL, PlayerState.Human]
+AI_Included = False
+HardCoded_Included = False
 
-if playerlist[0] != PlayerState.Human or playerlist[1] != PlayerState.Human:
-    AI_Included = True
-else:
-    AI_Included = False 
+for player_stat in playerlist:
+    if player_stat == PlayerState.AI_RL or player_stat == PlayerState.AI_Random:
+        AI_Included = True
+    elif player_stat == PlayerState.AI_Hardcoded:
+        HardCoded_Included = True
 
 if AI_Included:
     from AI_DQN import *
@@ -25,17 +27,15 @@ if AI_Included:
         'training': False,
         'state_space_dim': Input_Dim,
         'action_space_dim': Output_Dim
-        # 'epsi_high': 0.0,
-        # 'epsi_low': 0.0,
-        # 'lr': 0.001,
-        # 'gamma': 0.8,
-        # 'decay': int(1e6),
-        # 'capacity': 40000,
-        # 'batch_size': 64
     }
 
     RLAgent = Agent_RL(**params)
     RLAgent.load()
+
+if HardCoded_Included:
+    from AI_hardcoded import *
+
+    HCAgent = Agent_Hardcoded()
 
 
 controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
@@ -84,7 +84,10 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center = self.pos)
 
 class Game(object):
-    def __init__(self):
+    def __init__(self, mute = False):
+
+        self.mute = mute
+
         self.close = False
         self.winner = None
 
@@ -98,16 +101,14 @@ class Game(object):
         for Plane_Filename in Planeimg_Filename:
             curimage = pg.image.load(Image_Path + Plane_Filename).convert_alpha()
             
-            # curimage.set_colorkey((255,255,255))
-            # cursize = curimage.get_size()
             cur_imgresize = pg.transform.scale(curimage, (42, 16))
 
             self.PlaneImg.append(cur_imgresize)
 
         self.all_sprites = pg.sprite.Group()
 
-        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy()),
-                        Plane(playerlist[1], 1, p2_init_pos.copy())]
+        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy(), mute = self.mute),
+                        Plane(playerlist[1], 1, p2_init_pos.copy(), mute = self.mute)]
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]
@@ -121,22 +122,36 @@ class Game(object):
     def event_loop(self):
 
         # --------  AI Control  --------
+        
+        if AI_Included:
 
-        for serial in range(2):
+            for serial in range(2):
 
-            p = self.players[serial]
+                p = self.players[serial]
 
-            if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
-                cur_state = self.state(serial + 1)
-                # print(cur_state)
+                if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
+                    cur_state = self.state(serial + 1)
 
-                if p.controller == PlayerState.AI_RL:
-                    output_act = RLAgent.act(cur_state)
-                elif p.controller == PlayerStawte.AI_Random:
-                    output_act = RLAgent.act(cur_state, epsi = 1)
+                    if p.controller == PlayerState.AI_RL:
+                        output_act = RLAgent.act(cur_state)
+                    elif p.controller == PlayerState.AI_Random:
+                        output_act = RLAgent.act(cur_state, epsi = 1)
 
-                for i in range(len(controlseq)):
-                    self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
+                    for i in range(len(controlseq)):
+                        self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
+
+
+        if HardCoded_Included:
+
+            for serial in range(2):
+
+                p = self.players[serial]
+
+                if p.controller == PlayerState.AI_Hardcoded:
+                    output_set = HCAgent.act(p)
+
+                    for i in range(len(controlseq)):
+                        self.players[serial].key[controlseq[i]] = output_set[i]
 
         # -------- Human Control --------
 
@@ -227,13 +242,15 @@ class Game(object):
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, \
-                      _.missile_cooldown, _.hp]
+            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
 
             for i in range(len(_state)):
                 _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
 
-            cur_state += _state
+            if _ == cur_player:
+                cur_state += _state
+            else:
+                cur_state += _state[1:]
 
         return cur_state
 

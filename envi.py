@@ -2,20 +2,22 @@ import math
 import random
 from lib import *
 
-Initial_HP = 5
-Damage_per_hit = 1
+Initial_HP = 20
+Damage_per_hit = 2
 
 KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire'] #Missile
 
 class Plane(object):
 
-    def __init__(self, controller, heading, init_pos):
+    def __init__(self, controller, heading, init_pos, mute = False):
 
         self.heading = heading # 0 -> right, 1 -> left
 
         self.controller = controller
         
         self.enemy = None
+
+        self.mute = mute
 
         # ------- Flight Settings -------
 
@@ -48,7 +50,7 @@ class Plane(object):
 
         self.missile_cooldown = 0
 
-        self.hp = int(__srand(upper = 5, lower = 1))
+        self.hp = __srand(lower = 2, upper = 4)
 
     def reset(self, init_pos):
 
@@ -81,7 +83,7 @@ class Plane(object):
 
         # ------- Reward Settings -------
 
-        self.delta_speed = 0
+        # self.delta_speed = 0
         self.damage_caused = 0
         self.damage_received = 0
 
@@ -151,13 +153,6 @@ class Plane(object):
         if new_pos.x > Right_Margin:
             new_pos.x = Left_Margin - 30
 
-        # if (self._name == "f1"):
-        #     self_control(this)
-        # else:
-        #     enemy_control(this)
-        #    if ((self.damage > rep_damage) && (!repire_on)) {
-        #        repire_box_activated()
-
         # -----------------------------------------------------------------------------------------------
         # Landing Check
 
@@ -173,15 +168,10 @@ class Plane(object):
             else:
                 self.rotation = 0
 
-            if self.heading == 1 and (cur_rotat > 10 and cur_rotat < 355):
+            if self.heading == 1 and (cur_rotat > 15 and cur_rotat < 345):
                 vertical_force = 50
-            if self.heading == 0 and (cur_rotat < 170 or cur_rotat > 185):
+            if self.heading == 0 and (cur_rotat < 165 or cur_rotat > 195):
                 vertical_force = 50
-
-
-            # if self.heading == 1:
-            #     print(new_pos, 'vf', '{0:.4f}'.format(vertical_force))
-
 
             new_pos.y = Bottom_Margin
             if vertical_force > 0.46:
@@ -190,16 +180,13 @@ class Plane(object):
                 new_accel = vec(0, 0)
                 self.speed = 0
                 self.crashed = True
-                print('\nPlayer', self.heading + 1, 'Crashed!\n')
 
-            # if not self.on_ground:
-            #     self.status_change = 1
+                if not self.mute:
+                    print('\nPlayer', self.heading + 1, 'Crashed!\n')
 
             self.on_ground = True
 
         else:
-            # if self.on_ground:
-            #     self.status_change = 1
 
             self.on_ground = False
 
@@ -209,7 +196,7 @@ class Plane(object):
         self.accel = new_accel
 
         new_speed = (50 * self.speed / 51) + (booster_speed / 51)
-        self.delta_speed = new_speed - self.speed
+        # self.delta_speed = new_speed - self.speed
         self.speed = new_speed
 
         self._stall = new_stall
@@ -220,8 +207,6 @@ class Plane(object):
         else:
             self.beam_fire_clearup()
 
-        # if self.heading == 1:
-        #     print('Pos', self.pos, ' Accel', self.accel, ' Speed {:.3f}'.format(self.speed))
 
     def frame_control(self):
         if self.crashed or self.hp <= 0:
@@ -247,8 +232,6 @@ class Plane(object):
 
         if self.on_ground and self.speed < 1.25:
             self.missile_cooldown = max(self.missile_cooldown, 5)
-        # print(self.speed)
-            # if self.heading == 0: print('yes', self.pos)
 
     def beam_fire(self):
         self.missile_cooldown = 22
@@ -260,95 +243,33 @@ class Plane(object):
             self.damage_caused = Damage_per_hit
             self.enemy.damage_received = Damage_per_hit
 
-            print('Player', self.heading + 1, 'hit Player',  self.enemy.heading + 1, 'for', self.damage_caused, 'damage!')
+            if not self.mute:
 
-            if self.enemy.hp <= 0:
-                print('\nPlayer', self.enemy.heading + 1, 'fainted!\n')
+                print('Player', self.heading + 1, 'hit Player',  self.enemy.heading + 1, 'for', self.damage_caused, 'damage!')
+
+                if self.enemy.hp <= 0:
+                    print('\nPlayer', self.enemy.heading + 1, 'fainted!\n')
 
         self.beam_track = [8, (res[1].x, res[1].y)]
 
-        # print(self.hp, self.enemy.hp)
 
     def beam_fire_clearup(self):
         self.damage_caused = 0
         self.enemy.damage_received = 0
 
     def score(self):
-        # print(self.altitude_change)
+        ans = 0
+        targeting = self.pos.y < Bottom_Margin - 5 and hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)[0]
+
         if self.crashed:
-            return -1
-        elif self.enemy.hp <= 0:
-            return 1
-        elif self.damage_caused - self.damage_received != 0:
-            return self.damage_caused - self.damage_received
-        else:
-            return self.delta_speed
-            # return self.damage_caused - self.enemy.damage_received + self.altitude_change
-
-    #     if self.crashed or self.hp <= 0:
-    #         return 0.
-    #     elif self.enemy.hp == 0:
-    #         return 1.
-    #     else:
-    #         return self.hp * 0.005 + (100 - self.enemy.hp) * 0.005
+            ans -= self.hp
+        if self.pos.y < Bottom_Margin - 5:
+            ans += 1
+        if targeting:
+            ans += 1
+        if self.enemy.hp <= 0:
+            ans += 1
+        ans += self.damage_caused - self.damage_received
+        return ans
 
 
-
-    #     if (Key.isDown(86)):
-    #         if ((getTimer() - missle_lasttime_2nd) >= missle_timeout):
-    #             missle_lasttime_2nd = getTimer()
-    #             fire_missle(self)
-    #     if (Key.isDown(67)):
-    #         if ((getTimer() - gun_lasttime_2nd) >= gun_timeout)
-    #             if (self.gun_counter > 5):
-    #                 gun_lasttime_2nd = getTimer()
-    #             fire_gun(self)
-    #         else:
-    #             self.gun_counter = 0
-
-    
-    # function fire_gun(my) {
-    #     my.gun_counter = my.gun_counter + 2;
-    #     var _local6 = my._parent[(("gun_" + my._name) + "_") + (my.gun_counter - 2)].range;
-    #     var _local5 = (("gun_" + my._name) + "_") + my.gun_counter;
-    #     my._parent.attachMovie("gunfire", _local5, my.gun_counter + 200);
-    #     my._parent[_local5].play();
-    #     my._parent[_local5]._x = my._x;
-    #     my._parent[_local5]._y = my._y;
-    #     my._parent[_local5].rotation = my.rotation;
-    #     my._parent[_local5].range = range;
-    #     if (play_sound) {
-    #         gun_shoot.start(0, 4);
-    #     }
-    #     my._parent[_local5].onEnterFrame = function () {
-    #         var _local3;
-    #         this._x = this._x - (gun_speed * math.cos((this.rotation * math.pi) / 180));
-    #         this._y = this._y - (gun_speed * math.sin((this.rotation * math.pi) / 180));
-    #         for (_local3 in _root.flayers) {
-    #             if (((_root.flayers[_local3].hitTest(this) && (_local3 != my._name)) && ((_local3 == "f1") || (_local3 == "f4"))) && (this.range < range)) {
-    #                 _root.flayers[_local3].attachMovie("explosion", "blow", 1);
-    #                 var cur_rotat = new Sound(_root.flayers[_local3]);
-    #                 cur_rotat.attachSound("_sfxRicochet");
-    #                 cur_rotat.volume(75);
-    #                 if (play_sound) {
-    #                     cur_rotat.start(0, 1);
-    #                 }
-    #                 _root.flayers[_local3].blow._xscale = (_root.flayers[_local3].blow._yscale = 100);
-    #                 _root.flayers[_local3].blow.onEnterFrame = function () {
-    #                     if (this._currentframe == this._totalframes) {
-    #                         this._parent.createEmptyMovieClip("destruct", this.getDepth());
-    #                     }
-    #                 };
-    #                 _root.flayers[_local3].damage++;
-    #                 score_counter("gunshoot", _root.flayers[_local3]);
-    #                 if (_root.flayers[_local3].damage > max_damage) {
-    #                     destructor(_root.flayers[_local3]);
-    #                 }
-    #                 break;
-    #             }
-    #         }
-    #         if ((this._y > Bottom_Margin) || ((this.range--) <= 0)) {
-    #             this._parent.createEmptyMovieClip("destruct", this.getDepth());
-    #         }
-    #     };
-    # }

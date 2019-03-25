@@ -24,15 +24,15 @@ step_upper_thresh = 50000
 
 """ Initialization """
 
-pos_rand_const = 0.4
+pos_rand_const = 0.3
 
 class Game(object):
     def __init__(self):
         self.close = False
         self.winner = None
 
-        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy()),
-                        Plane(playerlist[1], 1, p2_init_pos.copy())]
+        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy(), mute = True),
+                        Plane(playerlist[1], 1, p2_init_pos.copy(), mute = True)]
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]
@@ -75,13 +75,15 @@ class Game(object):
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, \
-                      _.missile_cooldown, _.hp]
+            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
 
             for i in range(len(_state)):
                 _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
 
-            cur_state += _state
+            if _ == cur_player:
+                cur_state += _state
+            else:
+                cur_state += _state[1:]
 
         return cur_state
 
@@ -110,14 +112,13 @@ class Game(object):
 
 params = {
     'training': True,
-    'gamma': 0.95,
+    'gamma': 0.96,
     'epsi_high': 0.9,
-    'epsi_low': 0.05,
-    'decay': int(5e5), # Need edit
+    'epsi_low': 0.1,
+    'decay': int(1e5), # Need edit
     'lr': 0.001,
     'buffer_size': 40000,
     'batch_size': 64,
-    'unusual_sample_factor': 0.99,
     'state_space_dim': Input_Dim,
     'action_space_dim': Output_Dim
 }
@@ -134,9 +135,13 @@ def main():
 
     agent.load()
 
-    for episode in range(100000):
-        env.reset(rand = min(((1 - agent.epsi) ** 2) / 2, pos_rand_const))
+    for episode in range(20000):
+        rands = min((1 - agent.epsi) / 4, pos_rand_const)
 
+        env.reset(rand = rands)
+
+        if rands > 0.25:
+            agent.lr = 0.0001
         total_reward_p1 = 0 
         total_reward_p2 = 0
 
@@ -146,9 +151,9 @@ def main():
         r1_1 = env.reward(1)
         r1_2 = env.reward(2)
 
-        # while True:
-        print('Episode', episode)
-        print('Epsi {:.4f}'.format(agent.epsi))
+        if episode % 100 == 0:
+            print('Episode', episode)
+            print('Epsi {:.4f}'.format(agent.epsi))
 
         _ = 0
         while _ < step_upper_thresh:
@@ -167,23 +172,23 @@ def main():
             r1_1 = env.reward(1)
             r1_2 = env.reward(2)
 
-            if _ % 500 == 0:
+            if episode % 100 == 0:
+                if _ % 500 == 0:
+                    print('Trial', _, end = ' [')
 
-                print('Trial', _, end = ' [')
+                    for data in net_output_bool[a0_1]:
+                        print(int(data), end = '')
 
-                for data in net_output_bool[a0_1]:
-                    print(int(data), end = '')
+                    print('] {:.4f} {:.1f}  ['.format(r1_1, env.players[0].hp), end = '')
 
-                print('] {:.4f} {:.1f}  ['.format(r1_1, env.players[0].hp), end = '')
+                    for data in net_output_bool[a0_2]:
+                        print(int(data), end = '')
 
-                for data in net_output_bool[a0_2]:
-                    print(int(data), end = '')
+                    print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
 
-                print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
-
-            if r1_1 != 0 or random.random() < 0.01: 
+            if r1_1 != 0 or random.random() < 1: 
                 agent.put(s0_1, a0_1, r1_1, s1_1)
-            if r1_2 != 0 or random.random() < 0.01: 
+            if r1_2 != 0 or random.random() < 1: 
                 agent.put(s0_2, a0_2, r1_2, s1_2)
             
             agent.learn()
@@ -196,22 +201,27 @@ def main():
 
             s0_1, s0_2 = s1_1, s1_2
 
-        if _ >= step_upper_thresh:
-            print('\nStop current episode with no winner\n')
-
-        if env.close:
-            break
 
         score_1.append(total_reward_p1 + total_reward_p2)
         mean_1.append( sum(score_1[-100:])/min(len(score_1), 100))
 
-        if episode % 5 == 0:
+        if episode % 100 == 0:
+            print('Episode', episode, 'ends\n')
             print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
             agent.save()
 
+        if _ > 10000 and _ % 10000 == 0:
+            print('\n', score_1, '\n')
+
+        # if _ >= step_upper_thresh:
+        #     print('\nStop current episode with no winner\n')
+
+        if env.close:
+            break
+
+
         # agent.plot(score, mean)
 
-    pg.quit()
     sys.exit()
 
 '''
