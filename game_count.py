@@ -6,31 +6,55 @@ import pygame as pg
 
 from game import *
 
-playerlist = [PlayerState.AI_RL, PlayerState.AI_Hardcoded]
+""" Import Multiple AIs """
 
-total_trial = 100
+total_trial = 1000
 
 class Game_Count(Game):
     def __init__(self):
         super().__init__(mute = True)
 
-    def run(self):
+    def reset(self):
+        self.close = False
+        self.winner = None
+
+        self.all_sprites = pg.sprite.Group()
+
+        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy(), mute = self.mute),
+                        Plane(playerlist[1], 1, p2_init_pos.copy(), mute = self.mute)]
+
+        self.players[0].enemy = self.players[1]
+        self.players[1].enemy = self.players[0]
+
+        self.playerdisplay = [Player(self.players[0], self.PlaneImg[0], (128, 220, 32)),
+                              Player(self.players[1], self.PlaneImg[1], (220, 64,  64))]
+
+        for _ in self.playerdisplay:
+            self.all_sprites.add(_)
+
+
+    def run(self, record = False, count = 0):
         while not self.close and self.winner == None:
             self.event_loop()
             self.update()
 
-            # dt = self.clock.tick(self.fps)
             self.draw()
-            # pg.display.update()
+
+        if record:
+            fname = "result/winimg" + str(count) + ".png"
+            pg.image.save(self.screen, fname)
 
         hp1 = self.players[0].hp
         hp2 = self.players[1].hp
+        crashed = False
         if self.players[0].crashed: 
             hp1 = 0
-        if self.players[1].crashed: 
+            crashed = True
+        if self.players[1].crashed:
             hp2 = 0
+            crashed = True
 
-        return (self.winner, hp1, hp2)
+        return (self.winner, hp1, hp2, crashed)
 
         # while not self.close:
         #     self.event_loop()
@@ -42,15 +66,32 @@ def main():
     winner = [0, 0]
     for trial_count in range(total_trial):
 
+        game.reset()
+
         print('Game #{} Running ... '.format(trial_count), end = '')
 
-        res, hp1, hp2 = game.run()
-        print(res, 'wins!')
+        res, hp1, hp2, crashed = game.run(record = trial_count % 20 == 0, count = trial_count)
 
-        if hp1 > hp2:
+        if game.close:
+            break
+
+        if hp1 > hp2 and playerlist[0] == PlayerState.AI_RL or hp1 < hp2 and playerlist[1] == PlayerState.AI_RL:
+            print('AI_RL wins with', '{}:{}'.format(hp1, hp2), end = '')
+            if crashed:
+                print(' due to crashing')
+            else:
+                print()
             winner[0] += 1
         else:
+            print('AI_HC wins with', '{}:{}'.format(hp1, hp2), end = '')
+            if crashed:
+                print(' due to crashing')
+            else:
+                print()
             winner[1] += 1
+
+        if random.random() >= 0.5:
+            playerlist[0], playerlist[1] = playerlist[1], playerlist[0]
 
     if winner[0] > winner[1]:
         argmax = 0
@@ -65,5 +106,4 @@ def main():
 Check if main.py is the called program.
 '''
 if __name__ == '__main__':
-    print(playerlist)
     main()

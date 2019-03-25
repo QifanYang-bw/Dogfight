@@ -9,10 +9,6 @@ from const import *
 from lib import *
 from envi import *
 
-""" Game Constants """
-
-playerlist = [PlayerState.Human, PlayerState.AI_Hardcoded]
-
 """ Import Multiple AIs """
 
 AI_Included = False
@@ -23,7 +19,6 @@ for player_stat in playerlist:
         AI_Included = True
     elif player_stat == PlayerState.AI_Hardcoded:
         HardCoded_Included = True
-
 
 if AI_Included:
     from AI_DQN import *
@@ -127,7 +122,7 @@ class Game(object):
     def event_loop(self):
 
         # --------  AI Control  --------
-
+        
         if AI_Included:
 
             for serial in range(2):

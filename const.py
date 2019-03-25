@@ -1,6 +1,6 @@
 # import os
+from playerstate import *
 
-from enum import Enum
 import numpy as np
 
 WIDTH = 640
@@ -29,12 +29,6 @@ Power_Stage = 0.05
 Min_Stall = 0
 
 Max_Power = 4
-
-class PlayerState(Enum):
-    Human = 0
-    AI_RL = 1
-    AI_Random = 2
-    AI_Hardcoded = 3
 
 #controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 
