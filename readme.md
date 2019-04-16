@@ -1,9 +1,12 @@
-- The current code is a simulation demonstration of a single plane. This is the current usable part of the code.
+This is a dogfight simulator with a Reinforcement Learning agent. 
 
 To run the code, type
-```
+Type
+```bash
+$ pip3 install -r requirement.txt
 $ python3 game.py
 ```
+to start the program.
 
 Change the playerlist array in const.py to switch player.
 
@@ -16,3 +19,5 @@ Keyboard settings for player 2:
 - v for fire
 
 Each player have 20 hp, and a successful hit takes away 2 hp.
+
+* The latest version of python3 in MacOS installed by brew might not support pygame. One of the solutions is to install the python3 package on the official website.
