@@ -20,4 +20,4 @@ Keyboard settings for player 2:
 
 Each player have 20 hp, and a successful hit takes away 2 hp.
 
-* The latest version of python3 in MacOS installed by brew might not support pygame. One of the solutions is to install the python3 package on the official website.
+* The latest version of python3 in MacOS installed by brew might not support pygame. One of the solutions is to install the python3 package on the [official website](https://www.python.org/downloads/) instead of brew.
