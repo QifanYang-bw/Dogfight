@@ -1,7 +1,7 @@
 """
-
 Contains the Game Interface class.
 """
+
 import sys
 import pygame as pg
 
@@ -9,34 +9,29 @@ from const import *
 from lib import *
 from envi import *
 
-""" Import Multiple AIs """
+# -------------------- Loading Agent Library -------------------- #
 
-AI_Included = False
-HardCoded_Included = False
+from AI_DQN import *
 
-for player_stat in playerlist:
-    if player_stat == PlayerState.AI_RL or player_stat == PlayerState.AI_Random:
-        AI_Included = True
-    elif player_stat == PlayerState.AI_Hardcoded:
-        HardCoded_Included = True
+params = {
+    'training': False,
+    'state_space_dim': Input_Dim,
+    'action_space_dim': Output_Dim
+}
 
-if AI_Included:
-    from AI_DQN import *
+RLAgent = Agent_RL(**params)
+RLAgent.load()
 
-    params = {
-        'training': False,
-        'state_space_dim': Input_Dim,
-        'action_space_dim': Output_Dim
-    }
+from AI_hardcoded import *
 
-    RLAgent = Agent_RL(**params)
-    RLAgent.load()
+HCAgent = Agent_Hardcoded()
 
-if HardCoded_Included:
-    from AI_hardcoded import *
 
-    HCAgent = Agent_Hardcoded()
+# -------------------- End of Agent Loading -------------------- #
 
+
+
+# -------------------- Initialization -------------------- #
 
 controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 
@@ -46,13 +41,13 @@ p2_keyseq = [pg.K_a, pg.K_d, pg.K_w, pg.K_s, pg.K_v]
 p1_init_pos = vec(100, Bottom_Margin)
 p2_init_pos = vec(540, Bottom_Margin)
 
-""" Initialization """
-
 Image_Path = 'resources/'
 Planeimg_Filename = ['plane1.png', 'plane2.png']
 
 """ The length and size data here consists with the board image.
 """
+
+# -------------------- End of Initialization -------------------- #
 
 class Player(pg.sprite.Sprite):
     def __init__(self, plane, image, color):
@@ -84,7 +79,7 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center = self.pos)
 
 class Game(object):
-    def __init__(self, mute = False):
+    def __init__(self, plist = playerlist, mute = False):
 
         self.mute = mute
 
@@ -107,8 +102,8 @@ class Game(object):
 
         self.all_sprites = pg.sprite.Group()
 
-        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy(), mute = self.mute),
-                        Plane(playerlist[1], 1, p2_init_pos.copy(), mute = self.mute)]
+        self.players = [Plane(plist[0], 0, p1_init_pos.copy(), mute = self.mute),
+                        Plane(plist[1], 1, p2_init_pos.copy(), mute = self.mute)]
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]
@@ -122,36 +117,27 @@ class Game(object):
     def event_loop(self):
 
         # --------  AI Control  --------
-        
-        if AI_Included:
 
-            for serial in range(2):
+        for serial in range(2):
 
-                p = self.players[serial]
+            p = self.players[serial]
 
-                if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
-                    cur_state = self.state(serial + 1)
+            if p.controller == PlayerState.AI_RL or p.controller == PlayerState.AI_Random:
+                cur_state = self.state(serial + 1)
 
-                    if p.controller == PlayerState.AI_RL:
-                        output_act = RLAgent.act(cur_state)
-                    elif p.controller == PlayerState.AI_Random:
-                        output_act = RLAgent.act(cur_state, epsi = 1)
+                if p.controller == PlayerState.AI_RL:
+                    output_act = RLAgent.act(cur_state)
+                elif p.controller == PlayerState.AI_Random:
+                    output_act = RLAgent.act(cur_state, epsi = 1)
 
-                    for i in range(len(controlseq)):
-                        self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
+                for i in range(len(controlseq)):
+                    self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
 
+            if p.controller == PlayerState.AI_Hardcoded:
+                output_set = HCAgent.act(p)
 
-        if HardCoded_Included:
-
-            for serial in range(2):
-
-                p = self.players[serial]
-
-                if p.controller == PlayerState.AI_Hardcoded:
-                    output_set = HCAgent.act(p)
-
-                    for i in range(len(controlseq)):
-                        self.players[serial].key[controlseq[i]] = output_set[i]
+                for i in range(len(controlseq)):
+                    self.players[serial].key[controlseq[i]] = output_set[i]
 
         # -------- Human Control --------
 
@@ -256,7 +242,7 @@ class Game(object):
 
 
 def main():
-    game = Game()
+    game = Game(plist = [PlayerState.Human, PlayerState.AI_RL])
     game.run()
     pg.quit()
     sys.exit()

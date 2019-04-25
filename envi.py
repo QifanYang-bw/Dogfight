@@ -207,7 +207,6 @@ class Plane(object):
         else:
             self.beam_fire_clearup()
 
-
     def frame_control(self):
         if self.crashed or self.hp <= 0:
             return

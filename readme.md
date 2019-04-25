@@ -3,7 +3,7 @@ This is a dogfight simulator with a Reinforcement Learning agent.
 To run the code, type
 Type
 ```bash
-$ pip3 install -r requirement.txt
+$ pip3 install -r requirements.txt
 $ python3 game.py
 ```
 to start the program.
@@ -20,4 +20,4 @@ Keyboard settings for player 2:
 
 Each player have 20 hp, and a successful hit takes away 2 hp.
 
-* The latest version of python3 in MacOS installed by brew might not support pygame. One of the solutions is to install the python3 package on the [official website](https://www.python.org/downloads/) instead of brew.
+* The latest version of python3 in MacOS installed by brew might not support pygame. You might want to install the python3 package on the [official website](https://www.python.org/downloads/) without using brew.

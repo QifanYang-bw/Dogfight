@@ -47,7 +47,7 @@ class Agent_RL(object):
         if self.training:
 
             self.optimizer = optim.Adam(self.eval_net.parameters(), lr = self.lr)
-            self.buffer = []#ExperienceReplay(buffer_size = self.buffer_size, unusual_sample_factor = self.unusual_sample_factor)
+            self.buffer = []
             self.steps = 0
 
             self.epsi = self.epsi_high

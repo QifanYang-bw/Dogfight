@@ -6,4 +6,6 @@ class PlayerState(Enum):
     AI_Random = 2
     AI_Hardcoded = 3
 
+global playerlist
+
 playerlist = [PlayerState.Human, PlayerState.AI_RL]

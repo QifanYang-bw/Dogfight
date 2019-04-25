@@ -11,6 +11,10 @@ from lib import *
 from envi import *
 from AI_DQN import *
 
+from game_count_nd import *
+
+import csv
+
 """ Game Constants """
 
 controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
@@ -114,7 +118,7 @@ params = {
     'epsi_high': 0.9,
     'epsi_low': 0.1,
     'decay': int(1e5), # Need edit
-    'lr': 0.001,
+    'lr': 0.0005,
     'buffer_size': 40000,
     'batch_size': 64,
     'state_space_dim': Input_Dim,
@@ -133,9 +137,22 @@ def main():
     score_1 = []
     mean_1 = []
 
-    agent.load()
+    # agent.load()
+    agent.save()
 
-    for episode in range(20000):
+    for episode in range(1000):
+
+        if episode % 5 == 0:
+
+            with open(r'winrate.csv', 'a') as f:
+                writer = csv.writer(f)
+
+                ratio = compete(record = False)
+                fields = [episode, agent.steps, ratio]
+
+                writer.writerow(fields)
+
+
         rands = min((1 - agent.epsi) / 4, pos_rand_const)
 
         env.reset(rand = rands)
@@ -172,7 +189,7 @@ def main():
             r1_1 = env.reward(1)
             r1_2 = env.reward(2)
 
-            if episode % 100 == 0:
+            if episode % 5 == 0:
                 if _ % 500 == 0:
                     print('Trial', _, end = ' [')
 
@@ -203,15 +220,16 @@ def main():
 
 
         score_1.append(total_reward_p1 + total_reward_p2)
-        mean_1.append( sum(score_1[-100:])/min(len(score_1), 100))
+        mean_1.append(sum(score_1[-100:])/min(len(score_1), 100))
 
-        if episode % 100 == 0:
-            print('Episode', episode, 'ends\n')
-            print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
+        if episode % 5 == 0:
             agent.save()
 
-        if _ > 10000 and _ % 10000 == 0:
-            print('\n', score_1, '\n')
+            print('Episode', episode, 'ends\n')
+            print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
+
+        # if _ > 10000 and _ % 10000 == 0:
+        #     print('\n', score_1, '\n')
 
         # if _ >= step_upper_thresh:
         #     print('\nStop current episode with no winner\n')

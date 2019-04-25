@@ -14,8 +14,6 @@ from AI_DQN import *
 
 """ Game Constants """
 
-playerlist = [PlayerState.AI_RL, PlayerState.AI_RL]
-
 controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 
 p1_keyseq = [pg.K_LEFT, pg.K_RIGHT, pg.K_UP, pg.K_DOWN, pg.K_COMMA]
@@ -66,7 +64,7 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center = self.pos)
 
 class Game(object):
-    def __init__(self):
+    def __init__(self, plist):
         self.close = False
         self.winner = None
 
@@ -83,8 +81,8 @@ class Game(object):
 
         self.all_sprites = pg.sprite.Group()
 
-        self.players = [Plane(playerlist[0], 0, p1_init_pos.copy()),
-                        Plane(playerlist[1], 1, p2_init_pos.copy())]
+        self.players = [Plane(plist[0], 0, p1_init_pos.copy()),
+                        Plane(plist[1], 1, p2_init_pos.copy())]
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]
@@ -216,7 +214,9 @@ params = {
 
 def main():
 
-    env = Game()
+    plist = [PlayerState.AI_RL, PlayerState.AI_RL]
+
+    env = Game(plist = plist)
 
     agent = Agent_RL(**params)
 
