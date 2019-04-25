@@ -26,15 +26,16 @@ step_upper_thresh = 50000
 
 """ Initialization """
 
-pos_rand_const = 0.3
+pos_rand_const = 0.4
+random_shift_prob = 0.0005
 
 class Game(object):
     def __init__(self, plist):
         self.close = False
         self.winner = None
 
-        self.players = [Plane(plist[0], 0, p1_init_pos.copy(), mute = True),
-                        Plane(plist[1], 1, p2_init_pos.copy(), mute = True)]
+        self.players = [Plane(plist[0], 0, p1_init_pos.copy(), mute = True, hp = 10),
+                        Plane(plist[1], 1, p2_init_pos.copy(), mute = True, hp = 10)]
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]
@@ -44,8 +45,8 @@ class Game(object):
         self.winner = None
 
         if random.random() > rand:
-            self.players[0].reset(p1_init_pos.copy())
-            self.players[1].reset(p2_init_pos.copy())
+            self.players[0].reset(p1_init_pos.copy(), hp = 10)
+            self.players[1].reset(p2_init_pos.copy(), hp = 10)
         else:
             self.players[0].random_state()
             self.players[1].random_state()
@@ -68,24 +69,32 @@ class Game(object):
 
         return self.winner != None
 
+
     def state(self, serial):
         serial -= 1
 
         cur_player = self.players[serial]
-
         cur_state = []
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
+            if serial == 0:
 
-            for i in range(len(_state)):
-                _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y]
 
-            if _ == cur_player:
-                cur_state += _state
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
             else:
-                cur_state += _state[1:]
+
+                new_rot = vertical_mirror(_.rotation)
+
+                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y]
+
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
+            cur_state += _state
 
         return cur_state
 
@@ -98,9 +107,12 @@ class Game(object):
         alive_count = 0
 
         for obj in self.players:
-            if not obj.crashed and obj.hp > 0:
-                obj.frame_control()
-                obj.fly()
+            if random.random() > random_shift_prob:
+                if not obj.crashed and obj.hp > 0:
+                    obj.frame_control()
+                    obj.fly()
+            else:
+                obj.random_state()
 
     def make_move(self, serial, output_state):
         serial -= 1
@@ -119,7 +131,7 @@ params = {
     'epsi_low': 0.1,
     'decay': int(1e5), # Need edit
     'lr': 0.0005,
-    'buffer_size': 40000,
+    'buffer_size': 50000,
     'batch_size': 64,
     'state_space_dim': Input_Dim,
     'action_space_dim': Output_Dim
@@ -138,27 +150,13 @@ def main():
     mean_1 = []
 
     # agent.load()
-    agent.save()
 
     for episode in range(1000):
 
-        if episode % 5 == 0:
-
-            with open(r'winrate.csv', 'a') as f:
-                writer = csv.writer(f)
-
-                ratio = compete(record = False)
-                fields = [episode, agent.steps, ratio]
-
-                writer.writerow(fields)
-
-
-        rands = min((1 - agent.epsi) / 4, pos_rand_const)
+        rands = min(1 - agent.epsi, pos_rand_const)
 
         env.reset(rand = rands)
 
-        if rands > 0.25:
-            agent.lr = 0.0001
         total_reward_p1 = 0 
         total_reward_p2 = 0
 
@@ -168,7 +166,7 @@ def main():
         r1_1 = env.reward(1)
         r1_2 = env.reward(2)
 
-        if episode % 100 == 0:
+        if episode % 10 == 0:
             print('Episode', episode)
             print('Epsi {:.4f}'.format(agent.epsi))
 
@@ -189,19 +187,19 @@ def main():
             r1_1 = env.reward(1)
             r1_2 = env.reward(2)
 
-            if episode % 5 == 0:
-                if _ % 500 == 0:
+            if episode % 10 == 0:
+                if _ % 200 == 0:
                     print('Trial', _, end = ' [')
 
                     for data in net_output_bool[a0_1]:
                         print(int(data), end = '')
 
-                    print('] {:.4f} {:.1f}  ['.format(r1_1, env.players[0].hp), end = '')
+                    print('] {:.2f} {:.1f}  ['.format(r1_1, env.players[0].hp), end = '')
 
-                    for data in net_output_bool[a0_2]:
+                    for data in net_output_bool[a0_2]: 
                         print(int(data), end = '')
 
-                    print('] {:.4f} {:.1f}'.format(r1_2, env.players[1].hp))
+                    print('] {:.2f} {:.1f}'.format(r1_2, env.players[1].hp))
 
             if r1_1 != 0 or random.random() < 1: 
                 agent.put(s0_1, a0_1, r1_1, s1_1)
@@ -222,11 +220,22 @@ def main():
         score_1.append(total_reward_p1 + total_reward_p2)
         mean_1.append(sum(score_1[-100:])/min(len(score_1), 100))
 
-        if episode % 5 == 0:
+        if episode % 10 == 0:
             agent.save()
 
-            print('Episode', episode, 'ends\n')
-            print('Score: {:.3f}, Mean: {:.3f}'.format(score_1[-1], mean_1[-1]))
+            if episode > 0:
+                with open(r'winrate.csv', 'a') as f:
+                    writer = csv.writer(f)
+
+                    ratio = compete(record = False)
+                    fields = [episode, agent.steps, ratio]
+
+                    writer.writerow(fields)
+
+            print('Episode', episode, 'ends')
+            print('Score: {:.3f}, Mean: {:.3f}\n'.format(score_1[-1], mean_1[-1]))
+
+            print('Training...')
 
         # if _ > 10000 and _ % 10000 == 0:
         #     print('\n', score_1, '\n')

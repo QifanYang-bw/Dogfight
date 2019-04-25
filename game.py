@@ -130,6 +130,8 @@ class Game(object):
                 elif p.controller == PlayerState.AI_Random:
                     output_act = RLAgent.act(cur_state, epsi = 1)
 
+                # print(output_act)
+
                 for i in range(len(controlseq)):
                     self.players[serial].key[controlseq[i]] = net_output_bool[output_act][i]
 
@@ -223,26 +225,33 @@ class Game(object):
         serial -= 1
 
         cur_player = self.players[serial]
-
         cur_state = []
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
+            if serial == 0:
 
-            for i in range(len(_state)):
-                _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y]
 
-            if _ == cur_player:
-                cur_state += _state
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
             else:
-                cur_state += _state[1:]
+
+                new_rot = vertical_mirror(_.rotation)
+
+                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y]
+
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
+            cur_state += _state
 
         return cur_state
 
 
 def main():
-    game = Game(plist = [PlayerState.Human, PlayerState.Human])
+    game = Game(plist = [PlayerState.Human, PlayerState.AI_RL])
     game.run()
     pg.quit()
     sys.exit()

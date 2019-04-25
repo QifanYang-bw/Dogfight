@@ -29,7 +29,9 @@ Planeimg_Filename = ['plane1.png', 'plane2.png']
 
 step_upper_thresh = 50000
 
-pos_rand_const = 0.3
+pos_rand_const = 0.4
+random_shift_prob = 0.0001
+training_hp = 10
 
 """ The length and size data here consists with the board image.
 """
@@ -81,8 +83,8 @@ class Game(object):
 
         self.all_sprites = pg.sprite.Group()
 
-        self.players = [Plane(plist[0], 0, p1_init_pos.copy()),
-                        Plane(plist[1], 1, p2_init_pos.copy())]
+        self.players = [Plane(plist[0], 0, p1_init_pos.copy(), hp = 10),
+                        Plane(plist[1], 1, p2_init_pos.copy(), hp = 10)]
 
         self.players[0].enemy = self.players[1]
         self.players[1].enemy = self.players[0]
@@ -98,8 +100,8 @@ class Game(object):
         self.winner = None
 
         if random.random() > rand:
-            self.players[0].reset(p1_init_pos.copy())
-            self.players[1].reset(p2_init_pos.copy())
+            self.players[0].reset(p1_init_pos.copy(), hp = 10)
+            self.players[1].reset(p2_init_pos.copy(), hp = 10)
         else:
             self.players[0].random_state()
             self.players[1].random_state()
@@ -116,20 +118,27 @@ class Game(object):
         serial -= 1
 
         cur_player = self.players[serial]
-
         cur_state = []
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
+            if serial == 0:
 
-            for i in range(len(_state)):
-                _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y]
 
-            if _ == cur_player:
-                cur_state += _state
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
             else:
-                cur_state += _state[1:]
+
+                new_rot = vertical_mirror(_.rotation)
+
+                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y]
+
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
+            cur_state += _state
 
         return cur_state
 
@@ -142,9 +151,12 @@ class Game(object):
         alive_count = 0
 
         for obj in self.players:
-            if not obj.crashed and obj.hp > 0:
-                obj.frame_control()
-                obj.fly()
+            if random.random() > random_shift_prob:
+                if not obj.crashed and obj.hp > 0:
+                    obj.frame_control()
+                    obj.fly()
+            else:
+                obj.random_state()
 
             if not obj.crashed and obj.hp > 0:
                 alive_count += 1
@@ -205,7 +217,7 @@ params = {
     'epsi_high': 0.9,
     'epsi_low': 0.1,
     'decay': int(1e5), # Need edit
-    'lr': 0.001,
+    'lr': 0.0005,
     'buffer_size': 40000,
     'batch_size': 64,
     'state_space_dim': Input_Dim,
@@ -226,12 +238,9 @@ def main():
     agent.load()
 
     for episode in range(2000):
-        rands = min((1 - agent.epsi) / 4, pos_rand_const)
+        rands = min(1 - agent.epsi, pos_rand_const)
 
         env.reset(rand = rands)
-
-        if rands > 0.25:
-            agent.lr = 0.0001
 
         total_reward_p1 = 0 
         total_reward_p2 = 0

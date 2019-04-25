@@ -131,25 +131,31 @@ class Game_Count(object):
         serial -= 1
 
         cur_player = self.players[serial]
-
         cur_state = []
 
         for _ in [cur_player, cur_player.enemy]:
 
-            _state = [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
+            if serial == 0:
 
-            for i in range(len(_state)):
-                _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
 
-            if _ == cur_player:
-                cur_state += _state
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
             else:
-                cur_state += _state[1:]
+
+                new_rot = vertical_mirror(_.rotation)
+
+                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y, _.hp]
+
+                for i in range(len(_state)):
+                    _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
+
+            cur_state += _state
 
         return cur_state
 
-
-def compete(record = True, total_trial = 100):
+def compete(record = True, total_trial = 15):
 
     global enable_print
 
@@ -168,7 +174,7 @@ def compete(record = True, total_trial = 100):
 
         game.reset()
 
-        if trial_count % 20 == 0:
+        if trial_count % 5 == 0:
             print('#{} ... '.format(trial_count), end = '')
 
         rec_flag = record and trial_count % 20 == 0

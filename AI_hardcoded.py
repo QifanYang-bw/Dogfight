@@ -117,11 +117,18 @@ class Agent_Hardcoded(object):
 
         #controlseq : ['Left', 'Right', 'Up', 'Down', 'Fire']
 
+        ans = None
+
         if cur.pos.y > Bottom_Margin - 10:
-            return taking_off(cur)
+            ans = taking_off(cur)
         if cur.pos.y > self.lower:
-            return heading_up(cur)
+            ans = heading_up(cur)
         elif cur.pos.y < self.upper:
-            return heading_down(cur)
+            ans = heading_down(cur)
         else:
-            return adjust(cur)
+            ans = adjust(cur)
+
+        if cur.heading == 1:
+            ans[0], ans[1] = ans[1], ans[0]
+
+        return ans

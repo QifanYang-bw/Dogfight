@@ -22,7 +22,7 @@ class Net(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
 
-        hidden_size = [72, 324, 72]
+        hidden_size = [96, 48, 24]
 
         self.linear1 = nn.Linear(input_size, hidden_size[0])
         self.linear2 = nn.Linear(hidden_size[0], hidden_size[1])
@@ -80,13 +80,13 @@ class Agent_RL(object):
             self.buffer.pop(0)
         self.buffer.append(transition)
 
-    def __lr_modify(self):
-        if self.steps < 40000:
-            self.lr = 0.01
-        elif self.steps < 400000:
-            self.lr = 0.001
-        else:
-            self.lr = 0.0001
+    # def __lr_modify(self):
+    #     if self.steps < 40000:
+    #         self.lr = 0.01
+    #     elif self.steps < 400000:
+    #         self.lr = 0.001
+    #     else:
+    #         self.lr = 0.0001
 
     def learn(self):
         if len(self.buffer) < self.batch_size:
@@ -118,8 +118,6 @@ class Agent_RL(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
-        self.__lr_modify()
 
     def save(self):
         if not self.training:

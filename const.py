@@ -32,7 +32,7 @@ Max_Power = 4
 
 #controlseq = ['Left', 'Right', 'Up', 'Down', 'Fire']
 
-Input_Dim = 15
+Input_Dim = 12
 Output_Dim = 2
 
 # net_output_match = [[2], [2, 0], [2, 1],
@@ -54,6 +54,6 @@ net_random_prior = [1] * Output_Dim #[10, 10, 10, 1, 1, 1, 1, 1, 1, 10, 10, 10, 
 net_random_prior = list(np.array(net_random_prior) / sum(net_random_prior))
 
 # Upper and Lower limit of data, for normalization
-#                 [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
-state_upper_bar = [1, Right_Margin,     Top_Margin,    4, 360, 2,  2, 20]
-state_lower_bar = [0, Left_Margin - 30, Bottom_Margin, 0, 0,   0,  0, 0]
+#                 [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
+state_upper_bar = [Right_Margin,     Top_Margin,    4, 360, 2,  2, 20]
+state_lower_bar = [Left_Margin - 30, Bottom_Margin, 0, 0,   0,  0, 0]

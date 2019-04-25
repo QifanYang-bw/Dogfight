@@ -9,7 +9,7 @@ KEYPRESS_CODE = ['Up', 'Down', 'Left', 'Right', 'Fire'] #Missile
 
 class Plane(object):
 
-    def __init__(self, controller, heading, init_pos, mute = False):
+    def __init__(self, controller, heading, init_pos, mute = False, hp = Initial_HP):
 
         self.heading = heading # 0 -> right, 1 -> left
 
@@ -21,7 +21,7 @@ class Plane(object):
 
         # ------- Flight Settings -------
 
-        self.reset(init_pos)
+        self.reset(init_pos, hp = hp)
 
     def random_state(self):
 
@@ -37,22 +37,22 @@ class Plane(object):
 
             return ans
 
-#       [_.heading, _.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.missile_cooldown, _.hp]
-        rnd_pos = vec(__srand(match = 1), __srand(match = 2))
+#       [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y]
+        rnd_pos = vec(__srand(match = 0), __srand(match = 1))
 
         self.reset(rnd_pos)
 
-        self.speed = __srand(match = 3)
-        self.rotation = __srand(match = 4)
+        self.speed = __srand(match = 2)
+        self.rotation = __srand(match = 3)
 
-        self.accel = vec(__srand(match = 5), __srand(match = 6))
+        self.accel = vec(__srand(match = 4), __srand(match = 5))
         self.engine_power = __srand(lower = 0, upper = 4)
 
         self.missile_cooldown = 0
 
-        self.hp = __srand(lower = 2, upper = 4)
+        self.hp = __srand(lower = 2, upper = Initial_HP)
 
-    def reset(self, init_pos):
+    def reset(self, init_pos, hp = Initial_HP):
 
         self.pos = init_pos
         self.accel = vec(0, 0)
@@ -72,7 +72,7 @@ class Plane(object):
 
         # ------- Enemy and Fire Settings -------
 
-        self.hp = Initial_HP
+        self.hp = hp
         self.crashed = False
         self.firing = False
         self.on_ground = True
@@ -215,9 +215,9 @@ class Plane(object):
             self.engine_power -= Power_Stage
 
         stearing_accel = self.accel.dist() / 9;
-        if self.key['Left']:# and self._y < (Bottom_Margin - 2):
+        if self.key['Left'] and self.heading == 0 or self.key['Right'] and self.heading == 1:
             self.rotation = self.rotation - (Control_Stearing * stearing_accel)
-        if self.key['Right']:
+        if self.key['Left'] and self.heading == 1 or self.key['Right'] and self.heading == 0:
             self.rotation = self.rotation + (Control_Stearing * stearing_accel)
 
         if self.key['Up'] and self.engine_power < Max_Power:
@@ -261,12 +261,10 @@ class Plane(object):
         targeting = self.pos.y < Bottom_Margin - 5 and hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)[0]
 
         if self.crashed:
-            ans -= self.hp
+            ans -= 5
         if self.pos.y < Bottom_Margin - 5:
             ans += 1
         if targeting:
-            ans += 1
-        if self.enemy.hp <= 0:
             ans += 1
         ans += self.damage_caused - self.damage_received
         return ans

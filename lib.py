@@ -125,3 +125,10 @@ def hitbox_check(center1, rotate1, center2, rotate2, hitbox_width = Plane_Width,
     return (flag, p3)
 
 # print(hitbox_check(vec(100, 100), 180, vec(400, 120), 0, 42, 16))
+
+def vertical_mirror(rot):
+    if rot <= 180:
+        rot = 180 - rot
+    else:
+        rot = 540 - rot
+    return rot

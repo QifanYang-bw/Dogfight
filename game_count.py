@@ -7,8 +7,6 @@ import pygame as pg
 
 from game import *
 
-global enable_print
-
 """ Set Up Manual Print Function """
 
 enable_print = True
