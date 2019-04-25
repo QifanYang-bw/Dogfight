@@ -187,7 +187,7 @@ def main():
             r1_1 = env.reward(1)
             r1_2 = env.reward(2)
 
-            if episode % 10 == 0:
+            if episode % 8 == 0:
                 if _ % 200 == 0:
                     print('Trial', _, end = ' [')
 
@@ -220,7 +220,7 @@ def main():
         score_1.append(total_reward_p1 + total_reward_p2)
         mean_1.append(sum(score_1[-100:])/min(len(score_1), 100))
 
-        if episode % 10 == 0:
+        if episode % 8 == 0:
             agent.save()
 
             if episode > 0:

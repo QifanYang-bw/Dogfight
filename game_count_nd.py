@@ -155,7 +155,7 @@ class Game_Count(object):
 
         return cur_state
 
-def compete(record = True, total_trial = 15):
+def compete(record = True, total_trial = 100):
 
     global enable_print
 
