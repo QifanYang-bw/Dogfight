@@ -137,7 +137,7 @@ class Game_Count(object):
 
             if serial == 0:
 
-                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _.hp]
+                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y]
 
                 for i in range(len(_state)):
                     _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
@@ -146,7 +146,7 @@ class Game_Count(object):
 
                 new_rot = vertical_mirror(_.rotation)
 
-                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y, _.hp]
+                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y]
 
                 for i in range(len(_state)):
                     _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
