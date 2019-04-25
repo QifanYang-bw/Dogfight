@@ -242,7 +242,7 @@ class Game(object):
 
 
 def main():
-    game = Game(plist = [PlayerState.Human, PlayerState.AI_RL])
+    game = Game(plist = [PlayerState.Human, PlayerState.Human])
     game.run()
     pg.quit()
     sys.exit()
