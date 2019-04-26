@@ -175,18 +175,18 @@ def compete(record = False, total_trial = 15):
             break
 
         if hp1 > hp2 and plist[0] == PlayerState.AI_RL or hp1 < hp2 and plist[1] == PlayerState.AI_RL:
-            print('AI_RL wins with', '{}:{} in step {}'.format(hp1, hp2, game.stepcount), end = '')
-            if crashed:
-                print(' due to crashing')
-            else:
-                print()
+            # print('AI_RL wins with', '{}:{} in step {}'.format(hp1, hp2, game.stepcount), end = '')
+            # if crashed:
+            #     print(' due to crashing')
+            # else:
+            #     print()
             winner[0] += 1
         else:
-            print('AI_HC wins with', '{}:{} in step {}'.format(hp1, hp2, game.stepcount), end = '')
-            if crashed:
-                print(' due to crashing')
-            else:
-                print()
+            # print('AI_HC wins with', '{}:{} in step {}'.format(hp1, hp2, game.stepcount), end = '')
+            # if crashed:
+            #     print(' due to crashing')
+            # else:
+            #     print()
             winner[1] += 1
 
         if random.random() >= 0.5:

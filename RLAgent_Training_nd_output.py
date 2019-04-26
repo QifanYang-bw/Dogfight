@@ -235,7 +235,7 @@ def main():
             with open(r'winrate.csv', 'a') as f:
                 writer = csv.writer(f)
 
-                ratio = compete(record = False)
+                ratio = compete(record = False, total_trial = 100)
                 fields = [episode, agent.steps, ratio]
 
                 writer.writerow(fields)
