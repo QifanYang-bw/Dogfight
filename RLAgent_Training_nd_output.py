@@ -26,8 +26,8 @@ step_upper_thresh = 50000
 
 """ Initialization """
 
-pos_rand_const = 0.3
-random_shift_prob = 0.0005
+pos_rand_const = 0.1
+random_shift_prob = 0.001
 
 class Game(object):
     def __init__(self, plist):

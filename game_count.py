@@ -71,7 +71,7 @@ def compete(record = True, total_trial = 100):
     if not record:
         enable_print = False
 
-    plist = [PlayerState.AI_Hardcoded, PlayerState.AI_Hardcoded]
+    plist = [PlayerState.AI_RL, PlayerState.AI_Hardcoded]
 
     game = Game_Count(plist = plist)
 
@@ -89,7 +89,7 @@ def compete(record = True, total_trial = 100):
         if game.close:
             break
 
-        if hp1 > hp2:#hp1 > hp2 and plist[0] == PlayerState.AI_RL or hp1 < hp2 and plist[1] == PlayerState.AI_RL:
+        if hp1 > hp2 and plist[0] == PlayerState.AI_RL or hp1 < hp2 and plist[1] == PlayerState.AI_RL:
             lprint('AI_RL wins with', '{}:{}'.format(hp1, hp2), end = '')
             if crashed:
                 lprint(' due to crashing')
