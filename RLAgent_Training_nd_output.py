@@ -169,7 +169,7 @@ def main():
         r1_1 = env.reward(1)
         r1_2 = env.reward(2)
 
-        if episode % 5 == 0 and episode < 200 or episode % 20 == 0:
+        if episode % 2 == 0 and episode < 200 or episode % 10 == 0:
             test_flag = True
         else:
             test_flag = False
@@ -195,7 +195,7 @@ def main():
             r1_1 = env.reward(1)
             r1_2 = env.reward(2)
 
-            if episode % 5 == 0:
+            if test_flag:
                 if _ % 200 == 0:
                     print('Trial', _, end = ' [')
 
