@@ -12,6 +12,8 @@ from envi import *
 
 from AI_DQN import *
 
+from AI_hardcoded import *
+
 params = {
     'training': False,
     'state_space_dim': Input_Dim,
@@ -19,9 +21,6 @@ params = {
 }
 
 RLAgent = Agent_RL(**params)
-RLAgent.load()
-
-from AI_hardcoded import *
 
 HCAgent = Agent_Hardcoded()
 
@@ -43,18 +42,9 @@ class Game_Count(object):
     def __init__(self, plist = playerlist, mute = True):
 
         self.mute = mute
-
         self.plist = plist
 
-        self.close = False
-        self.winner = None
-
-        self.players = [Plane(plist[0], 0, p1_init_pos.copy(), mute = self.mute),
-                        Plane(plist[1], 1, p2_init_pos.copy(), mute = self.mute)]
-
-        self.players[0].enemy = self.players[1]
-        self.players[1].enemy = self.players[0]
-
+        self.reset()
 
     def event_loop(self):
 
@@ -81,6 +71,8 @@ class Game_Count(object):
 
 
     def reset(self):
+        self.stepcount = 0
+
         self.close = False
         self.winner = None
 
@@ -93,6 +85,7 @@ class Game_Count(object):
 
     def update(self):
         alive_count = 0
+        self.stepcount += 1
 
         for obj in self.players:
             if not obj.crashed and obj.hp > 0:
@@ -155,12 +148,9 @@ class Game_Count(object):
 
         return cur_state
 
-def compete(record = True, total_trial = 100):
+def compete(record = False, total_trial = 15):
 
-    global enable_print
-
-    if not record:
-        enable_print = False
+    RLAgent.load()
 
     plist = [PlayerState.AI_RL, PlayerState.AI_Hardcoded]
 
@@ -185,8 +175,18 @@ def compete(record = True, total_trial = 100):
             break
 
         if hp1 > hp2 and plist[0] == PlayerState.AI_RL or hp1 < hp2 and plist[1] == PlayerState.AI_RL:
+            print('AI_RL wins with', '{}:{} in step {}'.format(hp1, hp2, game.stepcount), end = '')
+            if crashed:
+                print(' due to crashing')
+            else:
+                print()
             winner[0] += 1
         else:
+            print('AI_HC wins with', '{}:{} in step {}'.format(hp1, hp2, game.stepcount), end = '')
+            if crashed:
+                print(' due to crashing')
+            else:
+                print()
             winner[1] += 1
 
         if random.random() >= 0.5:

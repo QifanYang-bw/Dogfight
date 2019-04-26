@@ -11,7 +11,7 @@ from lib import *
 from envi import *
 from AI_DQN import *
 
-from game_count_nd import *
+from game_count_nd import compete
 
 import csv
 
@@ -26,7 +26,7 @@ step_upper_thresh = 50000
 
 """ Initialization """
 
-pos_rand_const = 0.4
+pos_rand_const = 0.3
 random_shift_prob = 0.0005
 
 class Game(object):
@@ -151,6 +151,8 @@ def main():
 
     # agent.load()
 
+    test_flag = False
+
     for episode in range(1000):
 
         rands = min(1 - agent.epsi, pos_rand_const)
@@ -166,7 +168,12 @@ def main():
         r1_1 = env.reward(1)
         r1_2 = env.reward(2)
 
-        if episode % 10 == 0:
+        if episode % 5 == 0 and episode < 200 or episode % 20 == 0:
+            test_flag = True
+        else:
+            test_flag = False
+
+        if test_flag:
             print('Episode', episode)
             print('Epsi {:.4f}'.format(agent.epsi))
 
@@ -187,7 +194,7 @@ def main():
             r1_1 = env.reward(1)
             r1_2 = env.reward(2)
 
-            if episode % 8 == 0:
+            if episode % 5 == 0:
                 if _ % 200 == 0:
                     print('Trial', _, end = ' [')
 
@@ -220,22 +227,22 @@ def main():
         score_1.append(total_reward_p1 + total_reward_p2)
         mean_1.append(sum(score_1[-100:])/min(len(score_1), 100))
 
-        if episode % 8 == 0:
+        if test_flag:
+
             agent.save()
 
-            if episode > 0:
-                with open(r'winrate.csv', 'a') as f:
-                    writer = csv.writer(f)
+            with open(r'winrate.csv', 'a') as f:
+                writer = csv.writer(f)
 
-                    ratio = compete(record = False)
-                    fields = [episode, agent.steps, ratio]
+                ratio = compete(record = False)
+                fields = [episode, agent.steps, ratio]
 
-                    writer.writerow(fields)
+                writer.writerow(fields)
 
             print('Episode', episode, 'ends')
             print('Score: {:.3f}, Mean: {:.3f}\n'.format(score_1[-1], mean_1[-1]))
 
-            print('Training...')
+            print('Training...\n\n')
 
         # if _ > 10000 and _ % 10000 == 0:
         #     print('\n', score_1, '\n')

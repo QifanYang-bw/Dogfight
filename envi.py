@@ -261,11 +261,11 @@ class Plane(object):
         targeting = self.pos.y < Bottom_Margin - 5 and hitbox_check(self.pos, self.rotation, self.enemy.pos, self.enemy.rotation)[0]
 
         if self.crashed:
-            ans -= 5
+            ans -= 8
         if self.pos.y < Bottom_Margin - 5:
             ans += 1
-        if targeting:
-            ans += 1
+        ans += targeting
+
         ans += self.damage_caused - self.damage_received
         return ans
 
