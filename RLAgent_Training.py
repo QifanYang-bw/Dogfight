@@ -114,6 +114,7 @@ class Game(object):
     def done(self):
         return self.winner != None
 
+
     def state(self, serial):
         serial -= 1
 
@@ -124,7 +125,7 @@ class Game(object):
 
             if serial == 0:
 
-                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y]
+                _state = [_.pos.x, _.pos.y, _.speed, _.rotation, _.accel.x, _.accel.y, _._stall]
 
                 for i in range(len(_state)):
                     _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
@@ -133,7 +134,7 @@ class Game(object):
 
                 new_rot = vertical_mirror(_.rotation)
 
-                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y]
+                _state = [Right_Margin - (_.pos.x - (Left_Margin - 30)), _.pos.y, _.speed, new_rot, -_.accel.x, _.accel.y, _._stall]
 
                 for i in range(len(_state)):
                     _state[i] = (_state[i] - state_lower_bar[i]) / (state_upper_bar[i] - state_lower_bar[i])
@@ -218,7 +219,7 @@ params = {
     'epsi_low': 0.1,
     'decay': int(1e5), # Need edit
     'lr': 0.0005,
-    'buffer_size': 40000,
+    'buffer_size': 80000,
     'batch_size': 64,
     'state_space_dim': Input_Dim,
     'action_space_dim': Output_Dim

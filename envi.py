@@ -262,8 +262,8 @@ class Plane(object):
 
         if self.crashed:
             ans -= 8
-        if self.pos.y < Bottom_Margin - 5:
-            ans += 1
+        # if self.pos.y < Bottom_Margin - 5:
+        #     ans += 1
         ans += targeting
 
         ans += self.damage_caused - self.damage_received

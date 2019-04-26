@@ -22,7 +22,7 @@ class Net(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
 
-        hidden_size = [96, 48, 24]
+        hidden_size = [128, 32, 8]
 
         self.linear1 = nn.Linear(input_size, hidden_size[0])
         self.linear2 = nn.Linear(hidden_size[0], hidden_size[1])
@@ -30,8 +30,8 @@ class Net(nn.Module):
         self.linear4 = nn.Linear(hidden_size[2], output_size)
 
     def forward(self, x):
-        x = torch.sigmoid(self.linear1(x))
-        x = F.relu(self.linear2(x))
+        x = torch.tanh(self.linear1(x))
+        x = torch.tanh(self.linear2(x))
         x = F.relu(self.linear3(x))
         x = self.linear4(x)
         return x
