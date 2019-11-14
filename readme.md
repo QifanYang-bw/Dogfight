@@ -1,4 +1,4 @@
-This is a dogfight simulator with a Reinforcement Learning agent. 
+## Running
 
 To run the code, type
 ```bash
@@ -15,6 +15,8 @@ cd Dogfight-master
 pip3 install -r requirements.txt
 python3 game.py
 ```
+
+## Settings
 
 Change the playerlist array in const.py to switch player.
 
