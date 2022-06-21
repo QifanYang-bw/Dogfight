@@ -1,5 +1,5 @@
 matplotlib==3.0.2
-numpy==1.16.0
+numpy==1.22.0
 pygame==1.9.4
 scipy==1.2.0
 torch==1.0.0
